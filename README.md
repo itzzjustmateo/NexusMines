@@ -22,3 +22,5 @@ To run the project in your local environment, follow these steps:
 1. Run `bun install` in the project directory to install the required dependencies.
 1. Run `bun run dev` start to get the project started.
 1. Open `http://localhost:3000` (or the address shown in your console) in your web browser to view the app.
+## 🍿 Video
+We're working on a Video!
