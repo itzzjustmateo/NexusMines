@@ -1,26 +1,45 @@
-# 💎 NexusMines
-This is the website for **_NexusMines_**, not just another minecraft server! NexusMines is **the** minecraft-generator-server, because all it's systems are modern, always up-to-date, and more! Join now using the IP: "NexusMines.minekeep.gg"
+# 🔥 FlareDrive
+
+This is the official **web-only** client for ***FlareDrive***, your modern, fast, and clean file‑storage platform! FlareDrive focuses on simplicity, real-time performance, and a sleek interface—making file management smoother than ever.
 
 ## 📦 Technologies
-- `React`
-- `Next.JS`
-- `ShadCN`
-- `and even more...`
+
+* `Next.js`
+* `React`
+* `ShadCN`
+* `TailwindCSS`
+* `Clerk`
+* `and more...`
 
 ## 🦄 Features
-Here's what you can do on NexusMines (Website):
-- **See the Blog**: You can read **every** Blog-Post ever happend on NexusMines! Stay updated!
-### 🎯 Keyboard Shortcuts:
-Speed up your work with these shortcuts:
-- Ctrl + K: Get to the fast-search!
+
+What FlareDrive (Web) offers:
+
+* **Upload & Manage Files**: A simple and efficient interface to organize your files.
+* **Real-Time Updates**: Everything syncs instantly.
+* **Modern UI**: Clean, responsive, and minimal.
+
+### 🎯 Keyboard Shortcuts
+
+Speed up your work:
+
+* **Ctrl + K**: Open the command/search palette.
+
 ## 💭 How can it be improved?
-1. Add more themes, and user-custom-themes.
-1. Rewrite **every** text, to make it seem more user-friendly
+
+1. Add advanced file‑preview options.
+2. Introduce user‑configurable themes.
+3. Improve metadata management for large libraries.
+
 ## 🚦 Running the Project
-To run the project in your local environment, follow these steps:
-1. Clone the repository to your local machine.
-1. Run `bun install` in the project directory to install the required dependencies.
-1. Run `bun run dev` start to get the project started.
-1. Open `http://localhost:3000` (or the address shown in your console) in your web browser to view the app.
+
+To run the project locally:
+
+1. Clone the repository.
+2. Run `bun install` to install dependencies.
+3. Start the dev server with `bun run dev`.
+4. Open the link shown in your console.
+
 ## 🍿 Video
-We're working on a Video!
+
+A demo video is in work!
