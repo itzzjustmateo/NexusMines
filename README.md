@@ -1,45 +1,40 @@
-# 🔥 FlareDrive
+# 💎 NexusMines
 
-This is the official **web-only** client for ***FlareDrive***, your modern, fast, and clean file‑storage platform! FlareDrive focuses on simplicity, real-time performance, and a sleek interface—making file management smoother than ever.
+This is the website for ***NexusMines***, not just another minecraft server! NexusMines is **the** minecraft-generator-server, because all it's systems are modern, always up-to-date, and more! Join now using the IP: "NexusMines.minekeep.gg"
 
 ## 📦 Technologies
 
-* `Next.js`
 * `React`
+* `Next.JS`
 * `ShadCN`
-* `TailwindCSS`
-* `Clerk`
-* `and more...`
+* `and even more...`
 
 ## 🦄 Features
 
-What FlareDrive (Web) offers:
+Here's what you can do on NexusMines (Website):
 
-* **Upload & Manage Files**: A simple and efficient interface to organize your files.
-* **Real-Time Updates**: Everything syncs instantly.
-* **Modern UI**: Clean, responsive, and minimal.
+* **See the Blog**: You can read **every** Blog-Post ever happend on NexusMines! Stay updated!
 
-### 🎯 Keyboard Shortcuts
+### 🎯 Keyboard Shortcuts:
 
-Speed up your work:
+Speed up your work with these shortcuts:
 
-* **Ctrl + K**: Open the command/search palette.
+* Ctrl + K: Get to the fast-search!
 
 ## 💭 How can it be improved?
 
-1. Add advanced file‑preview options.
-2. Introduce user‑configurable themes.
-3. Improve metadata management for large libraries.
+1. Add more themes, and user-custom-themes.
+2. Rewrite **every** text, to make it seem more user-friendly.
 
 ## 🚦 Running the Project
 
-To run the project locally:
+To run the project in your local environment, follow these steps:
 
-1. Clone the repository.
-2. Run `bun install` to install dependencies.
-3. Start the dev server with `bun run dev`.
-4. Open the link shown in your console.
+1. Clone the repository to your local machine.
+2. Run `bun install` in the project directory to install the required dependencies.
+3. Run `bun run dev` to start the project.
+4. Open `http://localhost:3000` (or the address shown in your console) in your web browser.
 
 ## 🍿 Video
 
-A demo video is in work!
+We're working on a Video!
