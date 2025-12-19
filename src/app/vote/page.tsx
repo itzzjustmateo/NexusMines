@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function VotePage() {
   return (
     <section className="px-6 py-24 max-w-3xl mx-auto">
@@ -11,13 +13,13 @@ export default function VotePage() {
 
       <div className="mt-10 space-y-4">
         {["PlanetMinecraft", "MinecraftServers.org", "TopG"].map((site) => (
-          <a
+          <Link
             key={site}
             href="#"
             className="block rounded-xl border border-zinc-800 p-5 hover:bg-zinc-900"
           >
             Vote on {site}
-          </a>
+          </Link>
         ))}
       </div>
     </section>

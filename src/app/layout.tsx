@@ -8,6 +8,7 @@ import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/ui/footer";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { Text } from "@/components/ui/text";
+import Link from "next/link";
 
 const fontSans = FontSans({
   variable: "--font-c-sans",
@@ -40,7 +41,7 @@ export default function RootLayout({
       >
         {/* Skip-to-content text for accessibility */}
         <Text asChild size="xs" className="sr-only">
-          <a href="#content">Skip to content</a>
+          <Link href="#content">Skip to content</Link>
         </Text>
 
         <Navbar />

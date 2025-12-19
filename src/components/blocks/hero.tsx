@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Hero() {
   return (
     <div className="relative overflow-hidden">
@@ -12,19 +14,19 @@ export function Hero() {
         </p>
 
         <div className="mt-10 flex justify-center gap-4">
-          <a
+          <Link
             href="/vote"
             className="rounded-xl bg-[rgb(var(--accent))] px-6 py-3 font-semibold text-white"
           >
             Vote Now
-          </a>
+          </Link>
 
-          <a
+          <Link
             href="/about"
             className="rounded-xl border border-zinc-700 px-6 py-3"
           >
             Learn More
-          </a>
+          </Link>
         </div>
       </div>
     </div>
