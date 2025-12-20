@@ -11,6 +11,7 @@ import {
   Shield,
   Users,
   ClipboardCheck,
+  Server,
 } from "lucide-react";
 
 import { Text } from "@/components/ui/text";
@@ -24,6 +25,7 @@ type Command = {
 const commands: Command[] = [
   { label: "Home", path: "/", icon: Home },
   { label: "Vote", path: "/vote", icon: Vote },
+  { label: "Status", path: "/status", icon: Server },
   { label: "Staff", path: "/staff", icon: Users },
   { label: "Rules", path: "/rules", icon: Shield },
   { label: "Play", path: "/play", icon: Play },
