@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Home, Vote, Info, type LucideIcon, Play, Shield, Users } from "lucide-react";
+import {
+  Home,
+  Vote,
+  Info,
+  type LucideIcon,
+  Play,
+  Shield,
+  Users,
+  ClipboardCheck,
+} from "lucide-react";
 
 import { Text } from "@/components/ui/text";
 
@@ -14,10 +23,11 @@ type Command = {
 
 const commands: Command[] = [
   { label: "Home", path: "/", icon: Home },
-  { label: "Play", path: "/play", icon: Play },
   { label: "Vote", path: "/vote", icon: Vote },
-  { label: "Rules", path: "/rules", icon: Shield },
   { label: "Staff", path: "/staff", icon: Users },
+  { label: "Rules", path: "/rules", icon: Shield },
+  { label: "Play", path: "/play", icon: Play },
+  { label: "Apply", path: "/apply", icon: ClipboardCheck },
   { label: "About", path: "/about", icon: Info },
 ];
 
