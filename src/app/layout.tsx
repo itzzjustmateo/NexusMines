@@ -9,6 +9,7 @@ import { Footer } from "@/components/ui/footer";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { Text } from "@/components/ui/text";
 import Link from "next/link";
+import { ThemeProvider } from "@/components/provider/theme-provider";
 
 const fontSans = FontSans({
   variable: "--font-c-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={[
           fontSans.variable,
@@ -39,19 +40,26 @@ export default function RootLayout({
           "min-h-screen antialiased bg-background text-foreground",
         ].join(" ")}
       >
-        {/* Skip-to-content text for accessibility */}
-        <Text asChild size="xs" className="sr-only">
-          <Link href="#content">Skip to content</Link>
-        </Text>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {/* Skip-to-content text for accessibility */}
+          <Text asChild size="xs" className="sr-only">
+            <Link href="#content">Skip to content</Link>
+          </Text>
 
-        <Navbar />
-        <CommandPalette />
+          <Navbar />
+          <CommandPalette />
 
-        <main id="content" className="min-h-[calc(100vh-8rem)]">
-          {children}
-        </main>
+          <main id="content" className="min-h-[calc(100vh-8rem)]">
+            {children}
+          </main>
 
-        <Footer createdAt={2025} name="TechNova" allRightsReserved />
+          <Footer createdAt={2025} name="TechNova" allRightsReserved />
+        </ThemeProvider>
       </body>
     </html>
   );
