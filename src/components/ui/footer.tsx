@@ -33,6 +33,7 @@ function Footer({
     <footer className={cn("w-full py-6", className)} {...props}>
       <Text size="xs" variant="muted" align="center">
         © {yearLabel} {name}
+        {". "}
         {allRightsReserved && <> {rightsText}</>}
       </Text>
     </footer>
