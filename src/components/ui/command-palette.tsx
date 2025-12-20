@@ -44,12 +44,17 @@ export function CommandPalette() {
   );
 
   useEffect(() => {
+    function openPalette() {
+      setOpen(true);
+      setQuery("");
+      setSelectedIndex(0);
+    }
+
     function onKeyDown(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key === "k") {
         event.preventDefault();
-        setOpen((prev) => !prev);
-        setQuery("");
-        setSelectedIndex(0);
+        openPalette();
+        return;
       }
 
       if (!open) return;
@@ -81,7 +86,12 @@ export function CommandPalette() {
     }
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("command-palette:open", openPalette);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("command-palette:open", openPalette);
+    };
   }, [open, filteredCommands, selectedIndex, router]);
 
   if (!open) return null;
