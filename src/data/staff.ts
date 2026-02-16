@@ -23,4 +23,11 @@ export let staff: StaffMember[] = [
     bio: "Co-Founder and also a main developer of NexusMines.",
     image: "/staff/itzzmateo.png",
   },
+  {
+    id: "ccethan",
+    name: "CCEThan",
+    rank: "Developer",
+    bio: "Developer of NexusMines",
+    image: "/staff/ccethan.png"
+  },
 ];
