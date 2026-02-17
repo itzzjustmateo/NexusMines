@@ -10,24 +10,24 @@ export type StaffMember = {
 
 export const staff: StaffMember[] = [
   {
-    id: "draft",
-    name: "DraftierMovie66",
-    rank: "Founder",
-    bio: "Founder and main developer of NexusMines.",
-    image: "/staff/draftiermovie.png",
+    "id": "draft",
+    "name": "DraftierMovie66",
+    "rank": "Founder",
+    "bio": "Founder and main developer of NexusMines.",
+    "image": "/staff/d6490171-134d-4ee6-b3f0-f8c884f9c173.png"
   },
   {
-    id: "ijm",
-    name: "ItzzMateo",
-    rank: "Co-Founder",
-    bio: "Co-Founder and also a main developer of NexusMines.",
-    image: "/staff/itzzmateo.png",
+    "id": "ijm",
+    "name": "ItzzMateo",
+    "rank": "Co-Founder",
+    "bio": "Co-Founder and also a main developer of NexusMines.",
+    "image": "/staff/itzzmateo.png"
   },
   {
-    id: "ccethan",
-    name: "CCEThan",
-    rank: "Developer",
-    bio: "Developer of NexusMines",
-    image: "/staff/ccethan.png"
-  },
+    "id": "ccethan",
+    "name": "CCEThan",
+    "rank": "Developer",
+    "bio": "Developer of NexusMines",
+    "image": "/staff/0eff5505-954e-4c17-92ea-a1849ea4ddad.png"
+  }
 ];

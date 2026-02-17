@@ -10,6 +10,7 @@ import { CommandPalette } from "@/components/ui/command-palette";
 import { Text } from "@/components/ui/text";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/provider/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const fontSans = FontSans({
   variable: "--font-c-sans",
@@ -59,6 +60,7 @@ export default function RootLayout({
           </main>
 
           <Footer createdAt={2025} name="TechNova" allRightsReserved />
+          <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
     </html>
