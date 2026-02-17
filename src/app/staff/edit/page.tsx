@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 type StaffMember = {
   id: string;
@@ -18,6 +19,9 @@ export default function StaffEditPage() {
 
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Store refs for all file inputs for members
+  const fileInputRefs = useRef<{ [id: string]: HTMLInputElement | null }>({});
 
   // Load staff from server
   useEffect(() => {
@@ -51,6 +55,32 @@ export default function StaffEditPage() {
     e.preventDefault();
 
     const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    // Optimistic preview
+    const preview = URL.createObjectURL(file);
+    updateMember(member.id, { image: preview });
+
+    const form = new FormData();
+    form.append("file", file);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: form,
+    });
+
+    const data = await res.json();
+
+    // Replace preview with persisted path
+    updateMember(member.id, { image: data.path });
+  }
+
+  // New: handle upload from file input (click-to-select)
+  async function handleFileChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+    member: StaffMember,
+  ) {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     // Optimistic preview
@@ -129,21 +159,45 @@ export default function StaffEditPage() {
             key={member.id}
             className="grid gap-4 rounded-xl border border-border p-4 md:grid-cols-[120px_1fr]"
           >
-            {/* Drag & Drop Avatar */}
+            {/* Drag & Drop Avatar and Click-to-Select */}
             <div
               onDrop={(e) => handleDrop(e, member)}
               onDragOver={(e) => e.preventDefault()}
-              className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-dashed border-border text-xs text-muted-foreground"
+              tabIndex={0}
+              role="button"
+              onClick={() =>
+                fileInputRefs.current[member.id]?.click()
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  fileInputRefs.current[member.id]?.click();
+                }
+              }}
+              className="flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border text-xs text-muted-foreground transition hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Upload image"
             >
               {member.image ? (
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
+                  width={120}
+                  height={120}
                   className="h-full w-full object-cover"
                 />
               ) : (
-                "Drop image"
+                "Drop or click to select image"
               )}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                ref={(el) => {
+                  fileInputRefs.current[member.id] = el;
+                }}
+                onChange={e => handleFileChange(e, member)}
+                tabIndex={-1}
+              />
             </div>
 
             {/* Fields */}

@@ -8,7 +8,7 @@ export type StaffMember = {
   image: string;
 };
 
-export let staff: StaffMember[] = [
+export const staff: StaffMember[] = [
   {
     id: "draft",
     name: "DraftierMovie66",
