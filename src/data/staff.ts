@@ -29,12 +29,5 @@ export const staff: StaffMember[] = [
     "rank": "Developer",
     "bio": "Developer of NexusMines",
     "image": "/staff/0eff5505-954e-4c17-92ea-a1849ea4ddad.png"
-  },
-  {
-    "id": "ef4b6629-6fb3-4913-8d5a-afb5f661eb01",
-    "name": "ItzzMateo",
-    "rank": "Role",
-    "bio": "",
-    "image": ""
   }
 ];

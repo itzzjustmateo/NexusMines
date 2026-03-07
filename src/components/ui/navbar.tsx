@@ -17,7 +17,7 @@ const NAV_LINKS = [
 
 export function Navbar() {
   return (
-    <nav className="flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/70 backdrop-blur supports-[backdrop-filter]:bg-zinc-50/70 dark:supports-[backdrop-filter]:bg-zinc-950/70 z-40">
+    <nav className="flex items-center justify-between px-6 py-3 sticky top-0 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md supports-backdrop-filter:bg-white/70 dark:supports-backdrop-filter:bg-zinc-950/70 z-50 transition-colors duration-300">
       {/* Logo */}
         <Link
           href="/"

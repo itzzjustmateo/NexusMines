@@ -30,7 +30,7 @@ export function AddressCopy({
         description: value,
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy to clipboard");
     }
   }, [value, label]);
