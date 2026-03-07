@@ -12,15 +12,15 @@ export const staff: StaffMember[] = [
   {
     "id": "draft",
     "name": "DraftierMovie66",
-    "rank": "Founder",
+    "rank": "Owner",
     "bio": "Founder and main developer of NexusMines.",
     "image": "/staff/d6490171-134d-4ee6-b3f0-f8c884f9c173.png"
   },
   {
     "id": "ijm",
     "name": "ItzzMateo",
-    "rank": "Co-Founder",
-    "bio": "Co-Founder and also a main developer of NexusMines.",
+    "rank": "Co-Owner",
+    "bio": "Co-Owner also a main developer of NexusMines.",
     "image": "/staff/itzzmateo.png"
   },
   {

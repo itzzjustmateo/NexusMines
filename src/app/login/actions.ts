@@ -3,7 +3,7 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { admins } from "@/data/admin";
-import { getSession } from "@/lib/session";
+import { getSession, logout } from "@/lib/session";
 import { redirect } from "next/navigation";
 
 const loginSchema = z.object({
@@ -54,4 +54,9 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
     console.error("[Login] Unexpected error:", error);
     return { error: "An unexpected error occurred. Please try again." };
   }
+}
+
+export async function logoutAction() {
+  await logout();
+  redirect("/login");
 }

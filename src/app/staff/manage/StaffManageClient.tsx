@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { Trash, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
+import { logoutAction } from "../../login/actions";
 
 type StaffMember = {
   id: string;
@@ -180,13 +180,28 @@ export default function StaffEditPage({ username }: { username?: string }) {
   return (
     <section className="mx-auto max-w-5xl px-6 py-20">
       <div className="mb-6 flex items-center justify-between">
-        <div>
+        <div className="flex flex-col gap-1">
           <Text size="2xl" weight="bold">
             Edit Staff
           </Text>
-          <Text size="sm" className="text-zinc-500">
-            Welcome back, <span className="font-semibold text-zinc-900 dark:text-zinc-100">{username}</span>
-          </Text>
+          <div className="flex items-center gap-2">
+            <Text size="sm" className="text-zinc-500">
+              Welcome back, <span className="font-semibold text-zinc-900 dark:text-zinc-100">{username}</span>
+            </Text>
+            <span className="text-zinc-300 dark:text-zinc-700 mx-1">•</span>
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="h-auto p-0 text-zinc-500 hover:text-destructive transition-colors"
+              onClick={() => {
+                if (window.confirm("Are you sure you want to log out?")) {
+                  logoutAction();
+                }
+              }}
+            >
+              Logout
+            </Button>
+          </div>
         </div>
         <Button variant="outline" size="sm" onClick={addMember}>
           + Add Staff
