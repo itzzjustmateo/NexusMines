@@ -16,7 +16,7 @@ export default function StaffPage() {
             className="rounded-xl border border-border bg-card p-4"
           >
             <Image
-              src={member.image}
+              src={member.image || `https://mc-heads.net/avatar/${member.name}/96`}
               alt={member.name}
               width={96}
               height={96}

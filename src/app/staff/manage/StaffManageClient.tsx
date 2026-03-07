@@ -20,6 +20,7 @@ import Image from "next/image";
 import { Trash, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { logoutAction } from "../../login/actions";
+import { v4 as uuidv4 } from "uuid";
 
 type StaffMember = {
   id: string;
@@ -40,7 +41,6 @@ function useWarnIfDirty(isDirty: boolean) {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {
         e.preventDefault();
-        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handler);
@@ -346,6 +346,20 @@ const StaffMemberRow = memo(
                 className="h-full w-full object-cover"
                 unoptimized
               />
+            ) : member.name ? (
+              <div className="relative h-full w-full">
+                <Image
+                  src={`https://mc-heads.net/avatar/${member.name}/120`}
+                  alt={member.name}
+                  width={120}
+                  height={120}
+                  className="h-full w-full object-cover opacity-50 transition-opacity group-hover:opacity-30"
+                  unoptimized
+                />
+                <div className="absolute inset-0 flex items-center justify-center p-2 text-center leading-tight">
+                  Drop or click to select image
+                </div>
+              </div>
             ) : (
               "Drop or click to select image"
             )}

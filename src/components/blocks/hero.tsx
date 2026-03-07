@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SunMedium, MoonStar, DollarSign } from "lucide-react";
-import { Button } from "../ui/button";
 
 export function Hero() {
   return (
