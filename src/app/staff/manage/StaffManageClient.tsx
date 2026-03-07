@@ -20,7 +20,6 @@ import Image from "next/image";
 import { Trash, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { logoutAction } from "../../login/actions";
-import { v4 as uuidv4 } from "uuid";
 
 type StaffMember = {
   id: string;
@@ -84,7 +83,7 @@ export default function StaffEditPage({ username }: { username?: string }) {
 
   function addMember() {
     startTransition(() => {
-      const id = uuidv4();
+      const id = crypto.randomUUID();
       setStaff((prev) => [
         ...prev,
         {
@@ -328,7 +327,7 @@ const StaffMemberRow = memo(
             tabIndex={0}
             role="button"
             aria-label="Upload image"
-            className="relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-background text-xs text-muted-foreground transition hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="relative flex h-28 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-background text-xs text-muted-foreground transition hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-primary/50"
             onClick={openFileDialog}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
