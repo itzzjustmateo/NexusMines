@@ -1,13 +1,24 @@
+import { Text } from "@/components/ui/text";
+
 export function Hero() {
   return (
-    <div className="mb-6 text-center">
-      <h1 className="font-extrabold text-5xl md:text-7xl tracking-tight text-zinc-900 dark:text-white flex items-center justify-center gap-2 relative transition-colors duration-300">
-        NexusMines
-        <span className="text-brand-accent">Rules</span>
-      </h1>
-      <p className="mt-4 max-w-xl mx-auto text-zinc-600 dark:text-zinc-400 text-lg font-medium transition-colors duration-300">
-        Play fair, respect others, and help keep NexusMines fun for all.
-      </p>
+    <div className="text-center">
+      <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+        <Text variant="muted" weight="bold" className="text-sm uppercase tracking-[0.2em] mb-4">
+          The Rules
+        </Text>
+        <Text asChild size="2xl" weight="extrabold" className="tracking-tight text-3xl sm:text-4xl md:text-6xl lg:text-7xl">
+          <h1>
+            Nexus<span className="text-brand-accent">Mines</span> Rules
+          </h1>
+        </Text>
+      </div>
+
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+        <Text variant="muted" className="mt-4 text-lg max-w-xl mx-auto">
+          Please follow these guidelines to ensure a fair and enjoyable experience for everyone in our community.
+        </Text>
+      </div>
     </div>
   );
 }

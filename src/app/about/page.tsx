@@ -7,19 +7,28 @@ import { Team } from "@/components/blocks/about/team";
 
 export default function AboutPage() {
   return (
-    <section className="px-6 py-24 max-w-4xl mx-auto flex flex-col items-center">
-      <div className="rounded-xl border border-border bg-card shadow-md w-full max-w-2xl p-8 flex flex-col items-center">
-        <Hero />
-        <Features />
-        <Philosophy />
-        <Team />
+    <section className="mx-auto max-w-4xl px-6 py-12 sm:py-24 flex flex-col items-center">
+      <Hero />
+      <div className="mt-16 w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2">
+          <div className="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+            <Features />
+          </div>
+          <div className="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+            <Philosophy />
+          </div>
+        </div>
         
-        <div className="mt-8 text-center">
-          <p className="text-zinc-600 dark:text-zinc-400 text-sm">
-            Made with ❤️ by <span className="font-medium text-primary">TechNova</span>
+        <div className="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+          <Team />
+        </div>
+
+        <div className="mt-8 text-center pt-8 border-t border-zinc-100 dark:border-zinc-900">
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+            Made with ❤️ by <span className="font-semibold text-brand-accent">TechNova</span>
           </p>
-          <div className="mt-2 text-xs text-zinc-400">
-            Want to contribute or have feedback? Reach out on our Discord or open an issue on GitHub.
+          <div className="mt-2 text-[10px] uppercase font-bold tracking-widest text-zinc-400">
+            Want to contribute or have feedback? Reach out on our Discord or GitHub.
           </div>
         </div>
       </div>

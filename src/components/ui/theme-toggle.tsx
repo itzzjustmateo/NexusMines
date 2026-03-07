@@ -36,14 +36,14 @@ export function ModeToggle() {
           size="icon"
           className={cn(
             "relative h-10 w-10 rounded-xl",
-            "bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md",
+            "bg-transparent",
             "border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800",
             "transition-colors duration-200 outline-none"
           )}
           aria-label="Toggle theme"
         >
           {isDark ? (
-            <MoonStar className="h-[1.1rem] w-[1.1rem] text-brand-accent" />
+            <MoonStar className="h-[1.1rem] w-[1.1rem] text-white" />
           ) : (
             <SunMedium className="h-[1.1rem] w-[1.1rem] text-zinc-900 dark:text-white" />
           )}

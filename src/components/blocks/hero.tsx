@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, MoonStar, SunMedium } from "lucide-react";
 import { AddressCopy } from "@/components/ui/address-copy";
+import { config } from "@/data/config";
 
 export function Hero() {
-  const javaIp = "nexusmines.minekeep.gg";
-  const bedrockIp = "nexusmines.bedrock.minekeep.gg";
+  const javaIp = config.javaIp;
+  const bedrockIp = config.bedrockIp;
 
   return (
     <section className="relative flex flex-col items-center justify-center overflow-hidden px-4 py-24 bg-zinc-50/70 dark:bg-zinc-950/70 transition-colors duration-300">
@@ -19,20 +20,20 @@ export function Hero() {
       </div>
 
       {/* Main title */}
-      <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-        <h1 className="font-extrabold text-5xl md:text-7xl tracking-tight text-zinc-900 dark:text-white flex items-center justify-center gap-2 relative transition-colors duration-300">
+      <div className="mb-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 px-4">
+        <h1 className="font-extrabold text-4xl sm:text-5xl md:text-7xl tracking-tight text-zinc-900 dark:text-white flex flex-wrap items-center justify-center gap-x-3 transition-colors duration-300">
           Nexus
           <span className="text-brand-accent">Mines</span>
         </h1>
-        <p className="mt-4 max-w-xl mx-auto text-zinc-600 dark:text-zinc-400 text-lg font-medium transition-colors duration-300">
-          The best Mine-Server experience. Custom gameplay. <br />
+        <p className="mt-4 max-w-xl mx-auto text-zinc-600 dark:text-zinc-400 text-base sm:text-lg font-medium transition-colors duration-300 px-2">
+          The best Mine-Server experience. Custom gameplay. <br className="hidden sm:block" />
           Real progression. Zero nonsense.
         </p>
       </div>
 
       {/* Actions */}
-      <div className="flex justify-center items-center gap-6 mt-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-        <Button asChild variant="ghost" className="h-auto py-3 px-8 rounded-xl flex flex-col items-center group relative border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all duration-300">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 mt-6 mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <Button asChild variant="ghost" className="w-full sm:w-auto h-auto py-3 px-8 rounded-xl flex flex-col items-center group relative border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 bg-white/50 dark:bg-white/5 backdrop-blur-sm shadow-sm transition-all duration-300">
           <Link href="/vote">
             <span className="text-base font-bold tracking-tight">Vote now!</span>
             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] px-2 py-px rounded bg-zinc-100 dark:bg-zinc-900/60 text-zinc-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap">

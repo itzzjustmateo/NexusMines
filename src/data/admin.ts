@@ -8,13 +8,13 @@ export type Admin = {
 
 export const admins: Admin[] = [
   {
-    id: "1",
-    username: "DraftierMovie66",
-    passwordHash: "$2b$10$IC16jQPKF5GJE/YJ40RVs.qtykXVWadwRgxHxg.fZ1p9IFbwAV6.6",
+    "id": "1",
+    "username": "DraftierMovie66",
+    "passwordHash": "$2b$10$IC16jQPKF5GJE/YJ40RVs.qtykXVWadwRgxHxg.fZ1p9IFbwAV6.6"
   },
   {
-    id: "2",
-    username: "ItzzMateo",
-    passwordHash: "$2b$10$IC16jQPKF5GJE/YJ40RVs.qtykXVWadwRgxHxg.fZ1p9IFbwAV6.6",
-  },
+    "id": "2",
+    "username": "ItzzMateo",
+    "passwordHash": "$2b$10$IC16jQPKF5GJE/YJ40RVs.qtykXVWadwRgxHxg.fZ1p9IFbwAV6.6"
+  }
 ];

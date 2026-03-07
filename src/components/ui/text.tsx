@@ -26,6 +26,7 @@ const textVariants = cva(
         lg: "text-lg leading-8",
         xl: "text-xl leading-9",
         "2xl": "text-2xl leading-10",
+        "4xl": "text-4xl leading-12",
       },
       weight: {
         thin: "font-thin",
@@ -34,6 +35,8 @@ const textVariants = cva(
         medium: "font-medium",
         semibold: "font-semibold",
         bold: "font-bold",
+        extrabold: "font-extrabold",
+        black: "font-black",
       },
       align: {
         left: "text-left",

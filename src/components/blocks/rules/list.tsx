@@ -1,58 +1,84 @@
-import { ShieldAlert, UserCheck, BugOff, MegaphoneOff, Gavel } from "lucide-react";
+"use client";
 
-const rules = [
-  {
-    icon: <ShieldAlert className="h-6 w-6 text-red-500" />,
-    title: "No cheating, hacking, or unfair modifications.",
-    desc: "Play fair. Mods or clients that give unfair advantages are strictly forbidden.",
-  },
-  {
-    icon: <UserCheck className="h-6 w-6 text-cyan-500" />,
-    title: "Respect all players and staff.",
-    desc: "Treat everyone with kindness and maturity. Harassment, hate speech, or toxicity won’t be tolerated.",
-  },
-  {
-    icon: <BugOff className="h-6 w-6 text-orange-400" />,
-    title: "No griefing or exploiting bugs.",
-    desc: "Exploiting glitches or intentionally ruining experiences for others is not allowed. Report bugs to staff.",
-  },
-  {
-    icon: <MegaphoneOff className="h-6 w-6 text-fuchsia-500" />,
-    title: "No spamming or advertising.",
-    desc: "Keep chat clean and relevant. No server ads, self-promotion, or message flooding.",
-  },
-  {
-    icon: <Gavel className="h-6 w-6 text-zinc-600 dark:text-zinc-300" />,
-    title: "Staff decisions are final.",
-    desc: "Respect the judgment of our team. If you disagree, discuss politely and responsibly.",
-  },
-];
+import { rules } from "@/data/rules";
+import { Text } from "@/components/ui/text";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  ShieldAlert, 
+  UserCheck, 
+  BugOff, 
+  MegaphoneOff, 
+  Gavel,
+  AlertCircle,
+  Clock,
+  Heart,
+  Star,
+  Zap,
+  Hammer,
+  Lock,
+  MessageSquare,
+  Globe,
+  Ghost,
+  Sword,
+  Axe
+} from "lucide-react";
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  ShieldAlert,
+  UserCheck,
+  BugOff,
+  MegaphoneOff,
+  Gavel,
+  AlertCircle,
+  Clock,
+  Heart,
+  Star,
+  Zap,
+  Hammer,
+  Lock,
+  MessageSquare,
+  Globe,
+  Ghost,
+  Sword,
+  Axe
+};
 
 export function List() {
   return (
-    <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
-      {rules.map((rule, i) => (
-        <div
-          key={rule.title}
-          className={`
-            flex items-start gap-4 rounded-xl border
-            bg-white border-zinc-200 text-zinc-900 shadow-sm
-            dark:bg-zinc-950 dark:border-zinc-800 dark:text-zinc-100
-            px-6 py-6 transition-all duration-300
-            hover:bg-zinc-100 dark:hover:bg-zinc-900
-            group
-          `}
-        >
-          <div className="mt-1">{rule.icon}</div>
-          <div>
-            <h3 className="text-base font-semibold text-brand-accent flex items-center gap-2">
-              <span className="text-zinc-400 font-bold text-lg">#{i + 1}</span>
-              {rule.title}
-            </h3>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{rule.desc}</p>
-          </div>
-        </div>
-      ))}
+    <div className="mt-16 grid gap-6 grid-cols-1 sm:grid-cols-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+      {rules.map((rule, i) => {
+        const Icon = (rule.icon && ICON_MAP[rule.icon]) || AlertCircle;
+        
+        return (
+          <Card 
+            key={rule.id} 
+            className="group hover:bg-zinc-100/50 dark:hover:bg-zinc-900/50 transition-all duration-500 overflow-hidden border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md"
+          >
+            <CardContent className="p-6 flex items-start gap-5">
+              <div className="relative mt-1">
+                <div className="absolute -inset-2 bg-brand-accent/20 rounded-lg blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 group-hover:border-brand-accent/50 transition-colors duration-500">
+                  <Icon className="h-5 w-5 text-brand-accent" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Text size="xs" weight="black" className="text-zinc-400/50 tabular-nums">
+                    {(i + 1).toString().padStart(2, '0')}
+                  </Text>
+                  <Text size="md" weight="extrabold" className="text-zinc-900 dark:text-zinc-100">
+                    {rule.title}
+                  </Text>
+                </div>
+                <Text size="sm" variant="muted" className="leading-relaxed">
+                  {rule.desc}
+                </Text>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

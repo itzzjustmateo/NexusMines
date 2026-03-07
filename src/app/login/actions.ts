@@ -46,7 +46,7 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
     await session.save();
 
     console.log(`[Login] Success! Redirecting...`);
-    redirect("/staff/manage");
+    redirect("/admin");
   } catch (error) {
     if (error instanceof Error && "digest" in error && typeof error.digest === "string" && error.digest.startsWith("NEXT_REDIRECT")) {
       throw error;

@@ -1,7 +1,7 @@
-import { Server, Cable } from "lucide-react";
 import { Hero } from "@/components/blocks/status/hero";
 import { Indicator } from "@/components/blocks/status/indicator";
-import { ServerCard } from "@/components/blocks/status/server-card";
+import { List } from "@/components/blocks/status/list";
+import { config } from "@/data/config";
 
 type JavaStatus = {
   online: boolean;
@@ -28,10 +28,10 @@ type BedrockStatus = {
 
 async function getStatus() {
   const [javaRes, bedrockRes] = await Promise.all([
-    fetch("https://api.mcsrvstat.us/3/nexusmines.minekeep.gg", {
+    fetch(`https://api.mcsrvstat.us/3/${config.javaIp}`, {
       cache: "no-store",
     }),
-    fetch("https://api.mcsrvstat.us/bedrock/3/nexusmines.bedrock.minekeep.gg", {
+    fetch(`https://api.mcsrvstat.us/bedrock/3/${config.bedrockIp}`, {
       cache: "no-store",
     }),
   ]);
@@ -60,27 +60,12 @@ export default async function StatusPage() {
       <Hero />
       <Indicator online={java.online} />
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <ServerCard
-          icon={<Server className="h-5 w-5 text-[rgb(var(--accent))]" />}
-          title="Java Edition"
-          ip="nexusmines.minekeep.gg"
-          port={java.port ?? 25565}
-          version={resolvedVersion}
-          software={resolvedSoftware}
-          onlinePlayers={java.players?.online ?? 0}
-          maxPlayers={java.players?.max ?? "?"}
-        />
-
-        <ServerCard
-          icon={<Cable className="h-5 w-5 text-[rgb(var(--accent))]" />}
-          title="Bedrock Edition"
-          ip="nexusmines.bedrock.minekeep.gg"
-          port={bedrock.port ?? 19132}
-          onlinePlayers={java.players?.online ?? 0}
-          maxPlayers={java.players?.max ?? "?"}
-        />
-      </div>
+      <List 
+        java={java} 
+        bedrock={bedrock} 
+        resolvedVersion={resolvedVersion} 
+        resolvedSoftware={resolvedSoftware} 
+      />
     </section>
   );
 }
