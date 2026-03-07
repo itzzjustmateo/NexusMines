@@ -1,0 +1,45 @@
+name: Changelog and Build CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "CHANGELOG.md"
+      - "src/**"
+      - "package.json"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Validate CHANGELOG.md Exists
+        run: |
+          if [ ! -f "CHANGELOG.md" ]; then
+            echo "CHANGELOG.md is missing!"
+            exit 1
+          fi
+          echo "CHANGELOG.md found."
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Type Check
+        run: npx tsc --noEmit
+
+      - name: Build Next.js Site
+        run: bun run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1

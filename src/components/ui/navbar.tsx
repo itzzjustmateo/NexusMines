@@ -1,7 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Home, Users, Shield, Play, Info, TrendingUp, Settings } from "lucide-react";
+import { 
+  Search, Home, Users, Shield, Play, Info, TrendingUp, Settings, FileText, MoreHorizontal 
+} from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -11,13 +22,32 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X as CloseIcon } from "lucide-react";
 
-const NAV_LINKS = [
+const NAV_GROUPS = [
   { label: "Home", path: "/", icon: Home },
-  { label: "Staff", path: "/staff", icon: Users },
-  { label: "Rules", path: "/rules", icon: Shield },
-  { label: "Play", path: "/play", icon: Play },
-  { label: "Vote", path: "/vote", icon: TrendingUp },
-  { label: "About", path: "/about", icon: Info },
+  { 
+    label: "Gameplay", 
+    icon: Play,
+    children: [
+      { label: "Play", path: "/play", icon: Play, description: "Join our servers and start exploring." },
+      { label: "Rules", path: "/rules", icon: Shield, description: "Read the community guidelines." }
+    ]
+  },
+  { 
+    label: "Community", 
+    icon: Users,
+    children: [
+      { label: "Staff", path: "/staff", icon: Users, description: "Meet the team behind NexusMines." },
+      { label: "Vote", path: "/vote", icon: TrendingUp, description: "Support the server and earn rewards." }
+    ]
+  },
+  { 
+    label: "More", 
+    icon: MoreHorizontal,
+    children: [
+      { label: "Changelog", path: "/changelog", icon: FileText, description: "Recent tracking and improvements." },
+      { label: "About", path: "/about", icon: Info, description: "Learn more about our mission." }
+    ]
+  }
 ];
 
 export function Navbar() {
@@ -51,7 +81,7 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="flex items-center justify-between px-6 py-3 sticky top-0 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md supports-backdrop-filter:bg-white/70 dark:supports-backdrop-filter:bg-zinc-950/70 z-50 transition-colors duration-300">
+      <nav className="flex items-center justify-between px-6 lg:px-8 py-3 sticky top-0 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md supports-backdrop-filter:bg-white/70 dark:supports-backdrop-filter:bg-zinc-950/70 z-50 transition-colors duration-300">
         {/* Logo */}
         <Link
           href="/"
@@ -61,6 +91,100 @@ export function Navbar() {
           <span className="text-zinc-900 dark:text-white transition-colors">Nexus</span>
           <span className="text-brand-accent transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(var(--brand-accent-rgb),0.5)]">Mines</span>
         </Link>
+
+        {/* Desktop Navigation */}
+        <div className="hidden lg:flex flex-1 justify-center absolute left-1/2 -translate-x-1/2">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-1 flex items-center">
+              {NAV_GROUPS.map((group) => {
+                if (!group.children) {
+                  const isActive = pathname === group.path;
+                  return (
+                    <NavigationMenuItem key={group.label}>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href={group.path || "#"}
+                          className={cn(
+                            navigationMenuTriggerStyle(),
+                            "group relative rounded-xl px-4 py-2 flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 select-none animate-in fade-in slide-in-from-top-2",
+                            isActive 
+                              ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm" 
+                              : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                          )}
+                        >
+                          <group.icon className={cn(
+                            "h-3.5 w-3.5 transition-all duration-300",
+                            isActive ? "text-brand-accent scale-110" : "group-hover:scale-110"
+                          )} />
+                          <span>{group.label}</span>
+                          {isActive && (
+                            <span className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500" />
+                          )}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  );
+                }
+
+                // Render group with dropdown
+                // Check if any child is active to highlight parent trigger
+                const isChildActive = group.children.some(child => pathname === child.path);
+                
+                return (
+                  <NavigationMenuItem key={group.label}>
+                    <NavigationMenuTrigger
+                      className={cn(
+                        "group relative rounded-xl px-4 py-2 flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 data-[state=open]:bg-zinc-100 dark:data-[state=open]:bg-zinc-800 select-none animate-in fade-in slide-in-from-top-2",
+                        isChildActive
+                          ? "text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm"
+                          : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                      )}
+                    >
+                      <group.icon className={cn(
+                        "h-3.5 w-3.5 transition-all duration-300",
+                        isChildActive ? "text-brand-accent scale-110" : "group-hover:scale-110"
+                      )} />
+                      <span>{group.label}</span>
+                      {isChildActive && (
+                        <span className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500" />
+                      )}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4 md:grid-cols-2 rounded-2xl bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl border-zinc-200/50 dark:border-zinc-800/50">
+                        {group.children.map((child) => {
+                          const isChildCurrent = pathname === child.path;
+                          return (
+                            <li key={child.label}>
+                              <NavigationMenuLink asChild>
+                                <Link
+                                  href={child.path}
+                                  className={cn(
+                                    "block select-none space-y-1 rounded-xl p-3 leading-none no-underline outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-900 dark:focus:bg-zinc-900",
+                                    isChildCurrent ? "bg-zinc-50 dark:bg-zinc-900/50" : ""
+                                  )}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <child.icon className={cn("h-4 w-4", isChildCurrent ? "text-brand-accent" : "text-zinc-500")} />
+                                    <div className={cn("text-sm font-medium leading-none", isChildCurrent ? "text-zinc-900 dark:text-white" : "text-zinc-900 dark:text-zinc-100")}>
+                                      {child.label}
+                                    </div>
+                                  </div>
+                                  <p className="line-clamp-2 text-xs leading-snug text-zinc-500 dark:text-zinc-400 mt-1.5 ml-6">
+                                    {child.description}
+                                  </p>
+                                </Link>
+                              </NavigationMenuLink>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                );
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           <Button
@@ -79,64 +203,32 @@ export function Navbar() {
 
           <ModeToggle />
 
-          <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-2 hidden md:block" />
-
-          <div className="hidden md:flex items-center gap-1 sm:gap-1.5 ml-2">
-            {NAV_LINKS.map(({ label, path, icon: Icon }, index) => {
-              const isActive = pathname === path;
-              
-              return (
-                <Link
-                  key={label}
-                  href={path}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  className={cn(
-                    "group relative rounded-xl px-4 py-2 flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border animate-in fade-in slide-in-from-right-2 select-none",
-                    isActive 
-                      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm" 
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
-                  )}
-                  tabIndex={0}
-                >
-                  <Icon className={cn(
-                    "h-3.5 w-3.5 transition-all duration-300",
-                    isActive ? "text-brand-accent scale-110" : "group-hover:scale-110"
-                  )} />
-                  <span className="hidden sm:inline">{label}</span>
-                  
-                  {isActive && (
-                    <span 
-                      className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500"
-                    />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
           {/* Admin Dashboard Link */}
           {isAdmin && (
-            <Link
-              href="/admin"
-              className={cn(
-                "group relative rounded-xl px-3 py-2 hidden md:flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border animate-in fade-in select-none",
-                pathname === "/admin"
-                  ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm"
-                  : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
-              )}
-            >
-              <Settings className={cn("h-3.5 w-3.5 transition-all duration-300", pathname === "/admin" ? "text-brand-accent scale-110" : "group-hover:scale-110")} />
-              <span className="hidden sm:inline">Admin</span>
-              {pathname === "/admin" && (
-                <span className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500" />
-              )}
-            </Link>
+            <div className="hidden lg:flex items-center">
+              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-2" />
+              <Link
+                href="/admin"
+                className={cn(
+                  "group relative rounded-xl px-3 py-2 flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border animate-in fade-in select-none ml-2",
+                  pathname === "/admin"
+                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                )}
+              >
+                <Settings className={cn("h-3.5 w-3.5 transition-all duration-300", pathname === "/admin" ? "text-brand-accent scale-110" : "group-hover:scale-110")} />
+                <span className="hidden sm:inline">Admin</span>
+                {pathname === "/admin" && (
+                  <span className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500" />
+                )}
+              </Link>
+            </div>
           )}
 
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-10 w-10 rounded-xl relative z-[60]"
+            className="lg:hidden h-10 w-10 rounded-xl relative z-60"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
           >
@@ -151,7 +243,7 @@ export function Navbar() {
 
       <div 
         className={cn(
-          "fixed inset-0 z-40 md:hidden bg-white dark:bg-zinc-950 transition-all duration-500 ease-in-out",
+          "fixed inset-0 z-40 lg:hidden bg-white dark:bg-zinc-950 transition-all duration-500 ease-in-out",
           isMobileMenuOpen ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none -translate-y-4"
         )}
       >
@@ -172,7 +264,13 @@ export function Navbar() {
           </div>
 
           <div className="flex flex-col gap-2 grow">
-            {NAV_LINKS.map(({ label, path, icon: Icon }, index) => {
+            {NAV_GROUPS.reduce((acc: Array<typeof NAV_GROUPS[number]["children"] extends Array<infer T> ? T : typeof NAV_GROUPS[number]>, group) => {
+              if (group.children) {
+                return [...acc, ...group.children];
+              }
+              return [...acc, group as any];
+            }, []).map(({ label, path, icon: Icon }, index) => {
+              if (!path) return null; // Safety check
               const isActive = pathname === path;
               return (
                 <Link
