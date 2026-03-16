@@ -8,8 +8,8 @@ export type ServerConfig = {
 };
 
 export const config: ServerConfig = {
-  javaIp: "nexusmines.minekeep.gg",
-  bedrockIp: "nexusmines.bedrock.minekeep.gg",
-  javaPort: 25565,
-  bedrockPort: 19132,
+  "javaIp": process.env.NEXT_PUBLIC_JAVA_IP || "nexusmines.minekeep.gg",
+  "bedrockIp": process.env.NEXT_PUBLIC_BEDROCK_IP || "nexusmines.bedrock.minekeep.gg",
+  "javaPort": parseInt(process.env.NEXT_PUBLIC_JAVA_PORT || "25565"),
+  "bedrockPort": parseInt(process.env.NEXT_PUBLIC_BEDROCK_PORT || "19132")
 };

@@ -11,6 +11,7 @@ import { Text } from "@/components/ui/text";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { Providers } from "@/components/provider/providers";
 
 const fontSans = FontSans({
   variable: "--font-c-sans",
@@ -56,7 +57,9 @@ export default function RootLayout({
           <CommandPalette />
 
           <main id="content" className="min-h-[calc(100vh-8rem)]">
-            {children}
+            <Providers>
+              {children}
+            </Providers>
           </main>
 
           <Footer createdAt={2025} name="TechNova" allRightsReserved />

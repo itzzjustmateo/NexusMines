@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef, forwardRef, memo } from "react";
+import { useQueryState, parseAsString } from "nuqs";
 import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Image from "next/image";
 import {
   Trash, Loader2, X, Plus, Save,
@@ -52,6 +52,45 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 const AVAILABLE_ICONS = Object.keys(ICON_MAP);
 
+const tabs = [
+  { id: "staff", label: "Staff", icon: Users },
+  { id: "rules", label: "Rules", icon: ShieldCheck },
+  { id: "server", label: "Server", icon: Server },
+  { id: "accounts", label: "Accounts", icon: KeyRound },
+] as const;
+
+function TabsController() {
+  const [tab, setTab] = useQueryState("tab", {
+    defaultValue: "staff",
+    shallow: false,
+  });
+
+  return (
+    <div>
+      <div className="w-full grid grid-cols-4 mb-8">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+              tab === t.id
+                ? "bg-brand-accent text-white shadow-md"
+                : "bg-white/50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-800/50"
+            }`}
+          >
+            <t.icon className="h-4 w-4" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === "staff" && <StaffTab />}
+      {tab === "rules" && <RulesTab />}
+      {tab === "server" && <ServerTab />}
+      {tab === "accounts" && <AccountsTab />}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════
 // Admin Client
 // ═══════════════════════════════════════════════
@@ -94,18 +133,7 @@ export default function AdminClient({ username }: { username?: string }) {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="staff">
-          <TabsList className="w-full grid grid-cols-4 mb-8">
-            <TabsTrigger value="staff" className="gap-2"><Users className="h-4 w-4" />Staff</TabsTrigger>
-            <TabsTrigger value="rules" className="gap-2"><ShieldCheck className="h-4 w-4" />Rules</TabsTrigger>
-            <TabsTrigger value="server" className="gap-2"><Server className="h-4 w-4" />Server</TabsTrigger>
-            <TabsTrigger value="accounts" className="gap-2"><KeyRound className="h-4 w-4" />Accounts</TabsTrigger>
-          </TabsList>
-          <TabsContent value="staff"><StaffTab /></TabsContent>
-          <TabsContent value="rules"><RulesTab /></TabsContent>
-          <TabsContent value="server"><ServerTab /></TabsContent>
-          <TabsContent value="accounts"><AccountsTab /></TabsContent>
-        </Tabs>
+        <TabsController />
       </div>
     </section>
   );
@@ -412,7 +440,7 @@ const RuleRow = memo(forwardRef<HTMLDivElement, {
         <div><Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Description</Label><Textarea value={rule.desc} onChange={e => onUpdate(rule.id, { desc: e.target.value })} placeholder="Explain the rule in detail..." rows={3} /></div>
       </div>
       <div className="flex justify-end md:flex-col md:items-center">
-        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-red-500 transition-colors" onClick={() => { if (window.confirm("Delete this rule?")) onDelete(rule.id); }}>
+        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => { if (window.confirm("Delete this rule?")) onDelete(rule.id); }}>
           <Trash className="h-5 w-5" />
         </Button>
       </div>
@@ -587,7 +615,7 @@ function AccountsTab() {
             </div>
             <Button
               variant="ghost" size="icon"
-              className="text-zinc-400 hover:text-red-500 transition-colors"
+              className="text-zinc-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
               onClick={() => deleteAdmin(admin.id, admin.username)}
               disabled={admins.length <= 1}
             >

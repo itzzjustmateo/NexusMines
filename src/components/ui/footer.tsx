@@ -1,14 +1,24 @@
 import * as React from "react";
-
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
+import { Heart, Github, Twitter, MessageCircle } from "lucide-react";
 
-type FooterProps = React.HTMLAttributes<HTMLElement> & {
-  createdAt: number;
-  name: string;
-  allRightsReserved?: boolean;
-  rightsText?: string;
-  extraContent?: React.ReactNode;
+const FOOTER_LINKS = {
+  play: [
+    { label: "Join Server", href: "/play" },
+    { label: "Rules", href: "/rules" },
+  ],
+  community: [
+    { label: "Staff", href: "/staff" },
+    { label: "Vote", href: "/vote" },
+    { label: "Apply", href: "/apply" },
+  ],
+  resources: [
+    { label: "Changelog", href: "/changelog" },
+    { label: "About", href: "/about" },
+    { label: "Status", href: "/status" },
+  ],
 };
 
 function Footer({
@@ -17,12 +27,15 @@ function Footer({
   allRightsReserved = false,
   rightsText = "All rights reserved.",
   className,
-  extraContent,
   ...props
-}: FooterProps) {
+}: React.HTMLAttributes<HTMLElement> & {
+  createdAt: number;
+  name: string;
+  allRightsReserved?: boolean;
+  rightsText?: string;
+}) {
   const currentYear = new Date().getFullYear();
 
-  // Ensure createdAt is not in future and is a positive integer
   if (
     typeof createdAt !== "number" ||
     isNaN(createdAt) ||
@@ -43,22 +56,121 @@ function Footer({
   return (
     <footer
       className={cn(
-        "w-full py-8 border-t border-border bg-background/80 dark:bg-background/70 flex flex-col items-center gap-1 transition-all duration-200",
+        "w-full py-12 px-4 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 transition-colors duration-200",
         className
       )}
       {...props}
     >
-      <Text size="xs" variant="muted" align="center">
-        <span>
-          © {yearLabel} {name}.{" "}
-          {(allRightsReserved || rightsText) && (
-            <span>{rightsText}</span>
-          )}
-        </span>
-      </Text>
-      {extraContent && (
-        <div className="mt-1">{extraContent}</div>
-      )}
+      <div className="max-w-6xl mx-auto">
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          {/* Brand Column */}
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-2 group">
+              <span className="font-black text-xl tracking-tight">
+                Nexus<span className="text-brand-accent">Mines</span>
+              </span>
+            </Link>
+            <Text size="sm" variant="muted" className="mt-3">
+              The ultimate Minecraft experience with custom gameplay and real progression.
+            </Text>
+            {/* Social Links */}
+            <div className="flex items-center gap-3 mt-4">
+              <a
+                href="https://discord.gg/nexusmines"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-[#5865F2] hover:bg-[#5865F2]/10 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <Github className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          {/* Play Links */}
+          <div>
+            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+              Play
+            </Text>
+            <ul className="space-y-2.5">
+              {FOOTER_LINKS.play.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Community Links */}
+          <div>
+            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+              Community
+            </Text>
+            <ul className="space-y-2.5">
+              {FOOTER_LINKS.community.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Resources Links */}
+          <div>
+            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+              Resources
+            </Text>
+            <ul className="space-y-2.5">
+              {FOOTER_LINKS.resources.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <Text size="xs" variant="muted" className="text-center sm:text-left">
+            © {yearLabel} {name}. {allRightsReserved || rightsText}
+          </Text>
+          <Text size="xs" variant="muted" className="flex items-center gap-1">
+            Made with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> for Minecraft players
+          </Text>
+        </div>
+      </div>
     </footer>
   );
 }

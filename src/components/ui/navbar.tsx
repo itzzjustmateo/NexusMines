@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { 
-  Search, Home, Users, Shield, Play, Info, TrendingUp, Settings, FileText, MoreHorizontal 
+  Search, Home, Users, Shield, Play, Info, TrendingUp, Settings, FileText, MoreHorizontal, ClipboardCheck 
 } from "lucide-react";
 import {
   NavigationMenu,
@@ -25,10 +25,10 @@ import { Menu, X as CloseIcon } from "lucide-react";
 const NAV_GROUPS = [
   { label: "Home", path: "/", icon: Home },
   { 
-    label: "Gameplay", 
+    label: "Play", 
     icon: Play,
     children: [
-      { label: "Play", path: "/play", icon: Play, description: "Join our servers and start exploring." },
+      { label: "Join Server", path: "/play", icon: Play, description: "Connect to NexusMines and start playing." },
       { label: "Rules", path: "/rules", icon: Shield, description: "Read the community guidelines." }
     ]
   },
@@ -37,14 +37,15 @@ const NAV_GROUPS = [
     icon: Users,
     children: [
       { label: "Staff", path: "/staff", icon: Users, description: "Meet the team behind NexusMines." },
-      { label: "Vote", path: "/vote", icon: TrendingUp, description: "Support the server and earn rewards." }
+      { label: "Vote", path: "/vote", icon: TrendingUp, description: "Support the server and earn rewards." },
+      { label: "Apply", path: "/apply", icon: ClipboardCheck, description: "Apply to join our staff team." }
     ]
   },
   { 
     label: "More", 
     icon: MoreHorizontal,
     children: [
-      { label: "Changelog", path: "/changelog", icon: FileText, description: "Recent tracking and improvements." },
+      { label: "Changelog", path: "/changelog", icon: FileText, description: "Recent updates and improvements." },
       { label: "About", path: "/about", icon: Info, description: "Learn more about our mission." }
     ]
   }

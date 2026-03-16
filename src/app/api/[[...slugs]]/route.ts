@@ -4,12 +4,43 @@ import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
+import mysql from "mysql2/promise";
 
 const DATA_PATH = path.join(process.cwd(), "src/data/staff.ts");
 const RULES_DATA_PATH = path.join(process.cwd(), "src/data/rules.ts");
-const CONFIG_DATA_PATH = path.join(process.cwd(), "src/data/config.ts");
 const ADMIN_DATA_PATH = path.join(process.cwd(), "src/data/admin.ts");
 const UPLOAD_DIR = path.join(process.cwd(), "public/staff");
+
+const db = mysql.createPool({
+  host: "panel.devflare.de",
+  port: 3306,
+  user: "u3_onTMMeUESm",
+  password: "y2^zK=cbs2L42AJUDuDw0MkX",
+  database: "s3_nexusmines_web",
+});
+
+async function getConfigFromDb() {
+  try {
+    await db.execute("CREATE TABLE IF NOT EXISTS config (id INT PRIMARY KEY DEFAULT 1, javaIp VARCHAR(255), bedrockIp VARCHAR(255), javaPort INT, bedrockPort INT)");
+    const [rows] = await db.execute("SELECT * FROM config LIMIT 1");
+    const config = rows as { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number }[];
+    if (config.length > 0 && config[0].javaIp) {
+      return config[0];
+    }
+    const defaultConfig = { javaIp: "nexusmines.minekeep.gg", bedrockIp: "nexusmines.bedrock.minekeep.gg", javaPort: 25565, bedrockPort: 19132 };
+    await db.execute("INSERT INTO config (id, javaIp, bedrockIp, javaPort, bedrockPort) VALUES (1, ?, ?, ?, ?)", 
+      [defaultConfig.javaIp, defaultConfig.bedrockIp, defaultConfig.javaPort, defaultConfig.bedrockPort]);
+    return defaultConfig;
+  } catch (e) {
+    console.error("Error loading config from DB:", e);
+    return { javaIp: "nexusmines.minekeep.gg", bedrockIp: "nexusmines.bedrock.minekeep.gg", javaPort: 25565, bedrockPort: 19132 };
+  }
+}
+
+async function saveConfigToDb(config: { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number }) {
+  await db.execute("UPDATE config SET javaIp = ?, bedrockIp = ?, javaPort = ?, bedrockPort = ?", 
+    [config.javaIp, config.bedrockIp, config.javaPort, config.bedrockPort]);
+}
 
 // Ensure upload directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -127,38 +158,19 @@ export const rules: Rule[] = ${JSON.stringify(rules, null, 2)};
     })
   })
   // ─── Config ───
-  .get("/config", () => {
-    try {
-      const content = fs.readFileSync(CONFIG_DATA_PATH, "utf-8");
-      const match = content.match(/export const config: ServerConfig = ([\s\S]*);/);
-      if (match) {
-        let objStr = match[1].trim();
-        if (objStr.endsWith(";")) objStr = objStr.slice(0, -1);
-        const configData = new Function(`return ${objStr}`)();
-        return configData;
-      }
-      return { javaIp: "", bedrockIp: "", javaPort: 25565, bedrockPort: 19132 };
-    } catch (e) {
-      console.error("Error loading config:", e);
-      return { javaIp: "", bedrockIp: "", javaPort: 25565, bedrockPort: 19132 };
-    }
+  .get("/config", async () => {
+    return await getConfigFromDb();
   })
   .post("/config", async ({ body, set }) => {
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
-    const fileContent = `// src/data/config.ts
-
-export type ServerConfig = {
-  javaIp: string;
-  bedrockIp: string;
-  javaPort: number;
-  bedrockPort: number;
-};
-
-export const config: ServerConfig = ${JSON.stringify(body.config, null, 2)};
-`;
-    fs.writeFileSync(CONFIG_DATA_PATH, fileContent);
-    return { ok: true };
+    try {
+      await saveConfigToDb(body.config);
+      return { ok: true };
+    } catch (e) {
+      console.error("Error saving config:", e);
+      return { error: "Failed to save config" };
+    }
   }, {
     body: t.Object({
       config: t.Object({ javaIp: t.String(), bedrockIp: t.String(), javaPort: t.Number(), bedrockPort: t.Number() })
@@ -204,6 +216,51 @@ export const config: ServerConfig = ${JSON.stringify(body.config, null, 2)};
     return { path: `/staff/${fileName}` };
   }, {
     body: t.Object({ file: t.File() })
+  })
+  // ─── Staff Application ───
+  .post("/apply", async ({ body, set }) => {
+    const { discordUsername, minecraftUsername, age, experience, whyJoin, role } = body;
+    const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+    if (!webhookUrl) {
+      set.status = 500;
+      return { error: "Webhook not configured" };
+    }
+    const embed = {
+      embeds: [{
+        title: "📝 New Staff Application",
+        color: 5763714,
+        fields: [
+          { name: "Discord", value: discordUsername, inline: true },
+          { name: "Minecraft", value: minecraftUsername, inline: true },
+          { name: "Age", value: age, inline: true },
+          { name: "Role Applied", value: role, inline: true },
+          { name: "Experience", value: experience, inline: false },
+          { name: "Why Join", value: whyJoin, inline: false },
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: "NexusMines Staff Application" },
+      }],
+    };
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(embed),
+      });
+      return { ok: true };
+    } catch (e) {
+      console.error("Error sending webhook:", e);
+      return { error: "Failed to submit application" };
+    }
+  }, {
+    body: t.Object({
+      discordUsername: t.String(),
+      minecraftUsername: t.String(),
+      age: t.String(),
+      experience: t.String(),
+      whyJoin: t.String(),
+      role: t.String(),
+    })
   });
 
 export const GET = app.handle;
@@ -211,3 +268,5 @@ export const POST = app.handle;
 export const PUT = app.handle;
 export const DELETE = app.handle;
 export const PATCH = app.handle;
+
+export type Api = typeof app;
