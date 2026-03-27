@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/discord",
+        destination: "https://dc.gg/technova",
+        permanent: false,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

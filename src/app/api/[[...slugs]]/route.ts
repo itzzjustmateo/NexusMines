@@ -9,7 +9,19 @@ import mysql from "mysql2/promise";
 const DATA_PATH = path.join(process.cwd(), "src/data/staff.ts");
 const RULES_DATA_PATH = path.join(process.cwd(), "src/data/rules.ts");
 const ADMIN_DATA_PATH = path.join(process.cwd(), "src/data/admin.ts");
+const BLOG_DATA_PATH = path.join(process.cwd(), "src/data/blog.ts");
 const UPLOAD_DIR = path.join(process.cwd(), "public/staff");
+
+type BlogPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  author: string;
+  publishedAt: string;
+  tags: string[];
+};
 
 const db = mysql.createPool({
   host: "panel.devflare.de",
@@ -118,11 +130,11 @@ export const staff: StaffMember[] = ${JSON.stringify(staff, null, 2)};
       staff: t.Array(t.Object({ id: t.String(), name: t.String(), rank: t.String(), bio: t.String(), image: t.String() }))
     })
   })
-  // ─── Rules ───
+  // ─── Rules (Categories) ───
   .get("/rules", () => {
     try {
       const content = fs.readFileSync(RULES_DATA_PATH, "utf-8");
-      const match = content.match(/export const rules: Rule\[\] = ([\s\S]*);/);
+      const match = content.match(/export const rules: RuleCategory\[\] = ([\s\S]*);/);
       if (match) {
         let arrayStr = match[1].trim();
         if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
@@ -139,22 +151,32 @@ export const staff: StaffMember[] = ${JSON.stringify(staff, null, 2)};
     const { rules } = body;
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
-    const fileContent = `// src/data/rules.ts
-
-export type Rule = {
+    const fileContent = `export type Rule = {
   id: string;
   title: string;
   desc: string;
   icon?: string;
 };
 
-export const rules: Rule[] = ${JSON.stringify(rules, null, 2)};
+export type RuleCategory = {
+  id: string;
+  title: string;
+  icon: string;
+  rules: Rule[];
+};
+
+export const rules: RuleCategory[] = ${JSON.stringify(rules, null, 2)};
 `;
     fs.writeFileSync(RULES_DATA_PATH, fileContent);
     return { ok: true };
   }, {
     body: t.Object({
-      rules: t.Array(t.Object({ id: t.String(), title: t.String(), desc: t.String(), icon: t.Optional(t.String()) }))
+      rules: t.Array(t.Object({
+        id: t.String(),
+        title: t.String(),
+        icon: t.String(),
+        rules: t.Array(t.Object({ id: t.String(), title: t.String(), desc: t.String(), icon: t.Optional(t.String()) }))
+      }))
     })
   })
   // ─── Config ───
@@ -261,6 +283,114 @@ export const rules: Rule[] = ${JSON.stringify(rules, null, 2)};
       whyJoin: t.String(),
       role: t.String(),
     })
+  })
+  // ─── Blog ───
+  .get("/blog", () => {
+    try {
+      const content = fs.readFileSync(BLOG_DATA_PATH, "utf-8");
+      const match = content.match(/export const blogPosts: BlogPost\[\] = ([\s\S]*);/);
+      if (match) {
+        let arrayStr = match[1].trim();
+        if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
+        const blogData = new Function(`return ${arrayStr}`)();
+        return blogData;
+      }
+      return [];
+    } catch (e) {
+      console.error("Error loading blog posts:", e);
+      return [];
+    }
+  })
+  .post("/blog", async ({ body, set }) => {
+    const session = await getSession();
+    if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    const { slug, title, excerpt, content, coverImage, author, publishedAt, tags } = body;
+    try {
+      const existingContent = fs.readFileSync(BLOG_DATA_PATH, "utf-8");
+      const match = existingContent.match(/export const blogPosts: BlogPost\[\] = ([\s\S]*);/);
+      let posts: BlogPost[] = [];
+      if (match) {
+        let arrayStr = match[1].trim();
+        if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
+        posts = new Function(`return ${arrayStr}`)();
+      }
+      const newPost: BlogPost = {
+        slug: slug || title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        title,
+        excerpt,
+        content,
+        coverImage: coverImage || "",
+        author: author || "NexusMines Team",
+        publishedAt: publishedAt || new Date().toISOString().split("T")[0],
+        tags: tags || []
+      };
+      const existingIndex = posts.findIndex(p => p.slug === newPost.slug);
+      if (existingIndex >= 0) {
+        posts[existingIndex] = newPost;
+      } else {
+        posts.unshift(newPost);
+      }
+      const fileContent = `export type BlogPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  author: string;
+  publishedAt: string;
+  tags: string[];
+};
+
+export const blogPosts: BlogPost[] = ${JSON.stringify(posts, null, 2)};
+`;
+      fs.writeFileSync(BLOG_DATA_PATH, fileContent);
+      return { ok: true };
+    } catch (e) {
+      console.error("Error saving blog post:", e);
+      return { error: "Failed to save blog post" };
+    }
+  }, {
+    body: t.Object({
+      slug: t.Optional(t.String()),
+      title: t.String(),
+      excerpt: t.String(),
+      content: t.String(),
+      coverImage: t.Optional(t.String()),
+      author: t.Optional(t.String()),
+      publishedAt: t.Optional(t.String()),
+      tags: t.Optional(t.Array(t.String()))
+    })
+  })
+  .delete("/blog/:slug", async ({ params, set }) => {
+    const session = await getSession();
+    if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    try {
+      const content = fs.readFileSync(BLOG_DATA_PATH, "utf-8");
+      const match = content.match(/export const blogPosts: BlogPost\[\] = ([\s\S]*);/);
+      if (!match) { set.status = 404; return { error: "No posts found" }; }
+      let arrayStr = match[1].trim();
+      if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
+      let posts: BlogPost[] = new Function(`return ${arrayStr}`)();
+      posts = posts.filter(p => p.slug !== params.slug);
+      const fileContent = `export type BlogPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  author: string;
+  publishedAt: string;
+  tags: string[];
+};
+
+export const blogPosts: BlogPost[] = ${JSON.stringify(posts, null, 2)};
+`;
+      fs.writeFileSync(BLOG_DATA_PATH, fileContent);
+      return { ok: true };
+    } catch (e) {
+      console.error("Error deleting blog post:", e);
+      return { error: "Failed to delete blog post" };
+    }
   });
 
 export const GET = app.handle;

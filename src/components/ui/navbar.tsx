@@ -45,7 +45,7 @@ const NAV_GROUPS = [
     label: "More", 
     icon: MoreHorizontal,
     children: [
-      { label: "Changelog", path: "/changelog", icon: FileText, description: "Recent updates and improvements." },
+      { label: "Blog", path: "/blog", icon: FileText, description: "Latest news and articles." },
       { label: "About", path: "/about", icon: Info, description: "Learn more about our mission." }
     ]
   }

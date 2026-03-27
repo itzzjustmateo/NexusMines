@@ -2,7 +2,7 @@ import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Text } from "@/components/ui/text";
-import { Heart, Github, Twitter, MessageCircle } from "lucide-react";
+import { Heart, Github, MessageCircle } from "lucide-react";
 
 const FOOTER_LINKS = {
   play: [
@@ -15,7 +15,7 @@ const FOOTER_LINKS = {
     { label: "Apply", href: "/apply" },
   ],
   resources: [
-    { label: "Changelog", href: "/changelog" },
+    { label: "Blog", href: "/blog" },
     { label: "About", href: "/about" },
     { label: "Status", href: "/status" },
   ],
@@ -77,7 +77,7 @@ function Footer({
             {/* Social Links */}
             <div className="flex items-center gap-3 mt-4">
               <a
-                href="https://discord.gg/nexusmines"
+                href="/discord"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-[#5865F2] hover:bg-[#5865F2]/10 transition-colors"
@@ -85,15 +85,7 @@ function Footer({
                 <MessageCircle className="h-4 w-4" />
               </a>
               <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-              >
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a
-                href="https://github.com"
+                href="https://github.com/itzzjustmateo/NexusMines"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
