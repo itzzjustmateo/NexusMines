@@ -42,6 +42,7 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
     const session = await getSession();
     session.adminId = admin.id;
     session.username = admin.username;
+    session.roles = admin.roles;
     session.isLoggedIn = true;
     await session.save();
 

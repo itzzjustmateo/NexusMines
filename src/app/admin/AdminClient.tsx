@@ -9,12 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import Link from "next/link";
 import {
-  Trash, Loader2, X, Plus, Save,
+  Trash, Loader2, Plus, Save,
   Users, ShieldCheck, Server, KeyRound,
   ShieldAlert, UserCheck, BugOff, MegaphoneOff, Gavel, AlertCircle,
   Clock, Heart, Star, Zap, Hammer, Lock, MessageSquare, Globe, Ghost, Sword, Axe,
-  RefreshCw, Eye, EyeOff, Copy, FileText
+  RefreshCw, Eye, EyeOff, Copy, FileText,
+  Monitor, Wifi, ArrowLeft, Home, Gamepad2
 } from "lucide-react";
 import { toast } from "sonner";
 import { logoutAction } from "../login/actions";
@@ -23,15 +25,34 @@ import {
   ComboboxList, ComboboxItem, ComboboxEmpty,
 } from "@/components/ui/combobox";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { cn } from "@/lib/utils";
 
 // ─────────────────── Types ───────────────────
+
+type AdminRole = "owner" | "developer" | "admin";
 
 type StaffMember = { id: string; name: string; rank: string; bio: string; image: string };
 type Rule = { id: string; title: string; desc: string; icon?: string };
 type RuleCategory = { id: string; title: string; icon: string; rules: Rule[] };
 type BlogPost = { slug: string; title: string; excerpt: string; content: string; author: string; publishedAt: string; tags: string[]; coverImage?: string };
 type ServerConfig = { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number };
-type AdminAccount = { id: string; username: string };
+type AdminAccount = { id: string; username: string; roles: AdminRole[] };
+
+const ADMIN_ROLES = {
+  owner: { label: "Owner", color: "text-red-500", bg: "bg-red-500/10" },
+  developer: { label: "Developer", color: "text-purple-500", bg: "bg-purple-500/10" },
+  admin: { label: "Admin", color: "text-blue-500", bg: "bg-blue-500/10" },
+} as const;
+
+const PERMISSIONS = {
+  MANAGE_ADMINS: ["owner", "developer", "admin"] as AdminRole[],
+  MANAGE_ROLES: ["owner", "developer", "admin"] as AdminRole[],
+  MANAGE_PASSWORD: ["owner", "developer"] as AdminRole[],
+} as const;
+
+function hasPermission(userRoles: AdminRole[], permission: keyof typeof PERMISSIONS): boolean {
+  return userRoles.some(role => PERMISSIONS[permission].includes(role));
+}
 
 // ─────────────────── Helpers ───────────────────
 
@@ -55,7 +76,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 const AVAILABLE_ICONS = Object.keys(ICON_MAP);
 
-const tabs = [
+const navItems = [
   { id: "staff", label: "Staff", icon: Users },
   { id: "rules", label: "Rules", icon: ShieldCheck },
   { id: "blog", label: "Blog", icon: FileText },
@@ -63,84 +84,106 @@ const tabs = [
   { id: "accounts", label: "Accounts", icon: KeyRound },
 ] as const;
 
-function TabsController() {
+// ═══════════════════════════════════════════════
+// Admin Layout
+// ═══════════════════════════════════════════════
+
+export default function AdminClient({ username, roles }: { username?: string; roles: AdminRole[] }) {
   const [tab, setTab] = useQueryState("tab", {
     defaultValue: "staff",
     shallow: false,
   });
 
   return (
-    <div>
-      <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-8">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              tab === t.id
-                ? "bg-brand-accent text-white shadow-md"
-                : "bg-white/50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/50 dark:border-zinc-800/50"
-            }`}
-          >
-            <t.icon className="h-4 w-4" />
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {tab === "staff" && <StaffTab />}
-      {tab === "rules" && <RulesTab />}
-      {tab === "blog" && <BlogTab />}
-      {tab === "server" && <ServerTab />}
-      {tab === "accounts" && <AccountsTab />}
-    </div>
-  );
-}
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      {/* Top Header */}
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Back link & Logo */}
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <Home className="h-4 w-4" />
+              </Link>
+              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-accent to-indigo-600 flex items-center justify-center">
+                  <ShieldCheck className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-bold text-zinc-900 dark:text-white">Admin Dashboard</span>
+              </div>
+            </div>
 
-// ═══════════════════════════════════════════════
-// Admin Client
-// ═══════════════════════════════════════════════
+            {/* Center: Tabs */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setTab(item.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    tab === item.id
+                      ? "bg-brand-accent text-white shadow-md"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
 
-export default function AdminClient({ username }: { username?: string }) {
-  return (
-    <section className="relative flex flex-col items-center min-h-[calc(100vh-8rem)] py-12 sm:py-20 px-4 bg-zinc-50/70 dark:bg-zinc-950/70 transition-colors duration-300 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-accent/10 rounded-full blur-[100px] opacity-50 dark:opacity-30 pointer-events-none animate-in fade-in duration-1000" />
-      <div className="absolute bottom-1/4 right-1/4 w-120 h-120 bg-indigo-500/10 rounded-full blur-[120px] opacity-50 dark:opacity-30 pointer-events-none animate-in fade-in duration-1000 delay-300" />
-      
-      <div className="z-10 w-full max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {/* Header */}
-        <div className="mb-12 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 p-6 sm:p-8 rounded-3xl shadow-sm">
-          <div>
-            <h1 className="font-extrabold text-3xl sm:text-4xl md:text-5xl tracking-tight text-zinc-900 dark:text-white flex items-center gap-x-2 transition-colors duration-300">
-              Admin <span className="text-brand-accent">Dashboard</span>
-            </h1>
-            <div className="flex flex-wrap items-center gap-2 mt-3 text-sm">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-medium border border-zinc-200/50 dark:border-zinc-700/50">
-                <UserCheck className="h-4 w-4 text-brand-accent" />
-                {username}
-              </span>
-              <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
+            {/* Right: User & Logout */}
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <Text size="sm" weight="semibold" className="text-zinc-900 dark:text-white">{username}</Text>
+                <Text size="xs" variant="muted">Administrator</Text>
+              </div>
               <Button
-                variant="ghost" size="sm"
-                className="h-8 rounded-full px-3 text-zinc-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                 onClick={() => { if (window.confirm("Log out?")) logoutAction(); }}
               >
                 Log out
               </Button>
             </div>
           </div>
-          
-          <div className="hidden sm:flex items-center gap-3">
-             <div className="h-16 w-16 rounded-2xl bg-brand-accent/10 flex items-center justify-center border border-brand-accent/20 shadow-inner">
-               <ShieldCheck className="h-8 w-8 text-brand-accent" />
-             </div>
+
+          {/* Mobile Tabs */}
+          <div className="md:hidden flex items-center gap-1 pb-3 -mx-1 overflow-x-auto">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shrink-0",
+                  tab === item.id
+                    ? "bg-brand-accent text-white"
+                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                )}
+              >
+                <item.icon className="h-3.5 w-3.5" />
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
+      </header>
 
-        {/* Tabs */}
-        <TabsController />
-      </div>
-    </section>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {tab === "staff" && <StaffTab />}
+        {tab === "rules" && <RulesTab />}
+        {tab === "blog" && <BlogTab />}
+        {tab === "server" && <ServerTab />}
+        {tab === "accounts" && <AccountsTab userRoles={roles} />}
+      </main>
+    </div>
   );
 }
 
@@ -203,58 +246,76 @@ function StaffTab() {
       const res = await fetch("/api/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ staff }) });
       if (!res.ok) throw new Error();
       setInitialStaff(staff);
-      toast.success("Staff saved!");
-    } catch { toast.error("Save failed!"); }
+      toast.success("Staff saved successfully");
+    } catch { toast.error("Save failed"); }
     setSaving(false);
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <Text size="lg" weight="semibold">Staff Members</Text>
-        <Button variant="outline" size="sm" onClick={addMember}><Plus className="h-4 w-4 mr-2" />Add Staff</Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+            <Users className="h-7 w-7 text-brand-accent" />
+            Staff Members
+          </h2>
+          <Text variant="muted" className="mt-1">Manage your server staff team</Text>
+        </div>
+        <Button onClick={addMember} className="gap-2">
+          <Plus className="h-4 w-4" /> Add Staff
+        </Button>
       </div>
+
       {loading ? (
-        <div className="grid gap-6">{[1,2,3].map(i => <Skeleton key={i} className="h-40 w-full rounded-xl" />)}</div>
+        <div className="grid gap-4 sm:grid-cols-2">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}</div>
+      ) : staff.length === 0 ? (
+        <div className="text-center py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <Users className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
+          <Text variant="muted">No staff members yet</Text>
+          <Button variant="outline" className="mt-4" onClick={addMember}>
+            <Plus className="h-4 w-4 mr-2" /> Add your first staff member
+          </Button>
+        </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:grid-cols-2">
           {staff.map((member, idx) => (
-            <StaffMemberRow
-              key={member.id} member={member}
+            <StaffMemberCard
+              key={member.id}
+              member={member}
               isUploading={isUploading[member.id]}
               onDropOrChange={(file, revokeOld, oldUrl) => handleImageUpload({ file, memberId: member.id, revokeOld, oldUrl })}
-              onChange={updateMember} onDelete={deleteMember}
+              onChange={updateMember}
+              onDelete={deleteMember}
               ref={idx === staff.length - 1 ? newMemberRef : undefined}
               fileInputRef={el => { fileInputRefs.current[member.id] = el; }}
             />
           ))}
         </div>
       )}
-      <div className="mt-8 flex gap-2">
-        <Button onClick={save} disabled={saving || !isDirty}>
-          {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
-        </Button>
-        <Button variant="ghost" onClick={() => { setStaff(initialStaff); toast("Reverted"); }} disabled={!isDirty}>
-          <X className="h-4 w-4 mr-2" />Cancel
-        </Button>
-      </div>
+
+      {isDirty && (
+        <div className="sticky bottom-4 flex items-center justify-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
+          <Text size="sm" variant="muted">You have unsaved changes</Text>
+          <Button variant="outline" size="sm" onClick={() => { setStaff(initialStaff); toast("Changes discarded"); }}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={save} disabled={saving}>
+            {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─────────────────── Staff Member Row ───────────────────
-
-type StaffMemberRowProps = {
+const StaffMemberCard = memo(forwardRef<HTMLDivElement, {
   member: StaffMember;
   isUploading?: boolean;
   onDropOrChange: (file: File, revokeOld?: boolean, oldUrl?: string) => void;
   onChange: (id: string, patch: Partial<StaffMember>) => void;
   onDelete: (id: string) => void;
-  ref?: React.Ref<HTMLDivElement>;
   fileInputRef?: (el: HTMLInputElement | null) => void;
-};
-
-const StaffMemberRow = memo(forwardRef<HTMLDivElement, StaffMemberRowProps>(
+}>(
   ({ member, isUploading, onDropOrChange, onChange, onDelete, fileInputRef }, ref) => {
     const lastPreviewUrl = useRef<string | null>(null);
     const localFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -278,51 +339,68 @@ const StaffMemberRow = memo(forwardRef<HTMLDivElement, StaffMemberRowProps>(
     }
 
     return (
-      <div ref={ref} className="grid gap-6 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm p-6 sm:p-8 md:grid-cols-[120px_1fr_56px] relative group shadow-sm hover:shadow-md transition-all duration-300">
-        <div
-          onDrop={handleImageDrop} onDragOver={e => e.preventDefault()}
-          tabIndex={0} role="button" aria-label="Upload image"
-          className="relative flex h-28 w-28 mx-auto md:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-background text-xs text-muted-foreground transition hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-primary/50"
-          onClick={() => localFileInputRef.current?.click()}
-          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); localFileInputRef.current?.click(); } }}
-        >
-          {member.image ? (
-            <div className="relative group/avatar h-full w-full">
-              <Image src={member.image} alt={member.name} width={120} height={120} className="h-full w-full object-cover" unoptimized />
-              <Button type="button" size="icon" variant="destructive"
-                className="absolute inset-0 m-auto h-8 w-8 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity shadow-lg"
-                onClick={e => { e.stopPropagation(); if (window.confirm("Remove this profile picture?")) onChange(member.id, { image: "" }); }}
-              ><X className="h-4 w-4" /></Button>
+      <div ref={ref} className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div className="flex p-4 gap-4">
+          <div
+            onDrop={handleImageDrop} onDragOver={e => e.preventDefault()}
+            className="relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-brand-accent transition-colors"
+            onClick={() => localFileInputRef.current?.click()}
+          >
+            {member.image ? (
+              <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
+            ) : member.name ? (
+              <Image src={`https://mc-heads.net/avatar/${member.name}/120`} alt={member.name} fill className="object-cover opacity-50" unoptimized />
+            ) : (
+              <div className="flex items-center justify-center h-full text-[10px] text-zinc-400 text-center p-1">Drop image</div>
+            )}
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
+              </div>
+            )}
+            <input type="file" accept="image/*" style={{ display: "none" }} ref={localFileInputRef} onChange={handleFileInput} />
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-3">
+            <div>
+              <Input
+                value={member.name}
+                onChange={e => onChange(member.id, { name: e.target.value })}
+                placeholder="Staff name"
+                className="h-9 font-semibold"
+              />
             </div>
-          ) : member.name ? (
-            <div className="relative h-full w-full">
-              <Image src={`https://mc-heads.net/avatar/${member.name}/120`} alt={member.name} width={120} height={120} className="h-full w-full object-cover opacity-50 transition-opacity group-hover:opacity-30" unoptimized />
-              <div className="absolute inset-0 flex items-center justify-center p-2 text-center leading-tight">Drop or click</div>
+            <div>
+              <Input
+                value={member.rank}
+                onChange={e => onChange(member.id, { rank: e.target.value })}
+                placeholder="Rank (e.g. Admin)"
+                className="h-8 text-sm"
+              />
             </div>
-          ) : "Drop or click"}
-          <input type="file" accept="image/*" style={{ display: "none" }} ref={localFileInputRef} onChange={handleFileInput} tabIndex={-1} />
-          {isUploading && (
-            <div className="absolute inset-0 bg-background bg-opacity-70 flex items-center justify-center rounded-full">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-        </div>
-        <div className="grid gap-3">
-          <div><Label htmlFor={`staff-name-${member.id}`}>Name</Label><Input id={`staff-name-${member.id}`} value={member.name} onChange={e => onChange(member.id, { name: e.target.value })} /></div>
-          <div><Label htmlFor={`staff-rank-${member.id}`}>Rank</Label><Input id={`staff-rank-${member.id}`} value={member.rank} onChange={e => onChange(member.id, { rank: e.target.value })} /></div>
-          <div><Label htmlFor={`staff-bio-${member.id}`}>Bio</Label><Textarea id={`staff-bio-${member.id}`} value={member.bio} onChange={e => onChange(member.id, { bio: e.target.value })} rows={3} /></div>
-        </div>
-        <div className="flex flex-col items-end justify-start pt-2">
-          <Button type="button" variant="ghost" aria-label="Delete staff member"
-            className="opacity-60 hover:text-destructive hover:opacity-100 hover:bg-destructive/10 w-fit"
+          </div>
+
+          <button
             onClick={() => { if (window.confirm("Delete this staff member?")) onDelete(member.id); }}
-          ><Trash className="h-5 w-5" /></Button>
+            className="h-9 w-9 shrink-0 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+          >
+            <Trash className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="px-4 pb-4">
+          <Textarea
+            value={member.bio}
+            onChange={e => onChange(member.id, { bio: e.target.value })}
+            placeholder="Staff bio..."
+            rows={2}
+            className="text-sm resize-none"
+          />
         </div>
       </div>
     );
   }
 ));
-StaffMemberRow.displayName = "StaffMemberRow";
+StaffMemberCard.displayName = "StaffMemberCard";
 
 // ═══════════════════════════════════════════════
 // RULES TAB
@@ -394,28 +472,41 @@ function RulesTab() {
       const res = await fetch("/api/rules", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rules }) });
       if (!res.ok) throw new Error();
       setInitialRules(rules);
-      toast.success("Rules saved!");
-    } catch { toast.error("Save failed!"); }
+      toast.success("Rules saved successfully");
+    } catch { toast.error("Save failed"); }
     setSaving(false);
   }
 
-  if (loading) return <div className="grid gap-6">{[1,2,3].map(i => <Skeleton key={i} className="h-48 w-full rounded-xl" />)}</div>;
+  if (loading) return <div className="space-y-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}</div>;
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <Text size="lg" weight="semibold">Server Rules</Text>
-        <Button variant="outline" size="sm" onClick={addCategory}><Plus className="h-4 w-4 mr-2" />Add Category</Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+            <ShieldCheck className="h-7 w-7 text-brand-accent" />
+            Server Rules
+          </h2>
+          <Text variant="muted" className="mt-1">Manage server rules and categories</Text>
+        </div>
+        <Button onClick={addCategory} className="gap-2">
+          <Plus className="h-4 w-4" /> Add Category
+        </Button>
       </div>
-      
-      <div className="space-y-8">
-        {rules.length === 0 && (
-          <div className="text-center py-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-            <Text variant="muted">No categories yet. Click &quot;Add Category&quot; to get started.</Text>
-          </div>
-        )}
+
+      {rules.length === 0 && (
+        <div className="text-center py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <ShieldCheck className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
+          <Text variant="muted">No rule categories yet</Text>
+          <Button variant="outline" className="mt-4" onClick={addCategory}>
+            <Plus className="h-4 w-4 mr-2" /> Create your first category
+          </Button>
+        </div>
+      )}
+
+      <div className="space-y-4">
         {rules.map((category, idx) => (
-          <RuleCategoryRow
+          <RuleCategoryCard
             key={category.id}
             category={category}
             onUpdate={updateCategory}
@@ -429,19 +520,20 @@ function RulesTab() {
         ))}
       </div>
 
-      <div className="mt-8 flex gap-2">
-        <Button onClick={save} disabled={saving || !isDirty}>
-          {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
-        </Button>
-        <Button variant="ghost" onClick={() => { setRules(initialRules); toast("Reverted"); }} disabled={!isDirty}>
-          <X className="h-4 w-4 mr-2" />Cancel
-        </Button>
-      </div>
+      {isDirty && (
+        <div className="sticky bottom-4 flex items-center justify-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
+          <Text size="sm" variant="muted">You have unsaved changes</Text>
+          <Button variant="outline" size="sm" onClick={() => { setRules(initialRules); toast("Changes discarded"); }}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={save} disabled={saving}>
+            {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
-
-// ─────────────────── Rule Row ───────────────────
 
 const RuleRow = memo(forwardRef<HTMLDivElement, {
   rule: Rule;
@@ -455,47 +547,38 @@ const RuleRow = memo(forwardRef<HTMLDivElement, {
   }, [searchValue]);
 
   return (
-    <div ref={ref} className="p-6 sm:p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm grid grid-cols-1 md:grid-cols-[240px_1fr_40px] gap-8 items-start shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="space-y-4">
-        <div>
-          <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Icon</Label>
+    <div ref={ref} className="group p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800">
+      <div className="flex gap-4">
+        <div className="shrink-0">
           <Combobox value={rule.icon} onValueChange={icon => onUpdate(rule.id, { icon: icon as string })}>
-            <ComboboxInput placeholder="Search icons..." value={searchValue} onChange={e => setSearchValue(e.target.value)} />
+            <ComboboxInput placeholder="Icon..." className="w-32 h-9" />
             <ComboboxContent>
               <ComboboxList>
-                {filteredIcons.map(icon => {
+                {filteredIcons.slice(0, 10).map(icon => {
                   const Icon = ICON_MAP[icon];
                   return <ComboboxItem key={icon} value={icon} className="flex items-center gap-2"><Icon className="h-4 w-4" />{icon}</ComboboxItem>;
                 })}
               </ComboboxList>
-              <ComboboxEmpty>No icons found.</ComboboxEmpty>
             </ComboboxContent>
           </Combobox>
         </div>
-        <div className="flex flex-col items-center justify-center p-6 bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-          {(() => {
-            const Icon = (rule.icon && ICON_MAP[rule.icon]) || AlertCircle;
-            return <><Icon className="h-10 w-10 text-brand-accent mb-2" /><Text size="xxs" variant="muted" className="uppercase font-bold tracking-widest">{rule.icon || "Default"}</Text></>;
-          })()}
+        <div className="flex-1 space-y-2">
+          <Input value={rule.title} onChange={e => onUpdate(rule.id, { title: e.target.value })} placeholder="Rule title" className="h-9" />
+          <Textarea value={rule.desc} onChange={e => onUpdate(rule.id, { desc: e.target.value })} placeholder="Rule description..." rows={2} className="text-sm resize-none" />
         </div>
-      </div>
-      <div className="space-y-4">
-        <div><Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Title</Label><Input value={rule.title} onChange={e => onUpdate(rule.id, { title: e.target.value })} placeholder="e.g. Respect all players" /></div>
-        <div><Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Description</Label><Textarea value={rule.desc} onChange={e => onUpdate(rule.id, { desc: e.target.value })} placeholder="Explain the rule in detail..." rows={3} /></div>
-      </div>
-      <div className="flex justify-end md:flex-col md:items-center">
-        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive hover:bg-destructive/10 transition-colors" onClick={() => { if (window.confirm("Delete this rule?")) onDelete(rule.id); }}>
-          <Trash className="h-5 w-5" />
-        </Button>
+        <button
+          onClick={() => { if (window.confirm("Delete this rule?")) onDelete(rule.id); }}
+          className="h-9 w-9 shrink-0 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <Trash className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );
 }));
 RuleRow.displayName = "RuleRow";
 
-// ─────────────────── Rule Category Row ───────────────────
-
-const RuleCategoryRow = memo(forwardRef<HTMLDivElement, {
+const RuleCategoryCard = memo(forwardRef<HTMLDivElement, {
   category: RuleCategory;
   onUpdate: (id: string, patch: Partial<RuleCategory>) => void;
   onDelete: () => void;
@@ -505,93 +588,69 @@ const RuleCategoryRow = memo(forwardRef<HTMLDivElement, {
   categoryIcons: string[];
 }>(({ category, onUpdate, onDelete, onAddRule, onUpdateRule, onDeleteRule, categoryIcons }, ref) => {
   const [searchValue, setSearchValue] = useState("");
+  const [expanded, setExpanded] = useState(true);
   const filteredIcons = useMemo(() => {
     if (!searchValue) return categoryIcons;
     return categoryIcons.filter(icon => icon.toLowerCase().includes(searchValue.toLowerCase()));
   }, [searchValue, categoryIcons]);
 
   const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-    Shield: ShieldAlert,
-    Gamepad2: Users,
-    MessageSquare: MessageSquare,
-    Users: UserCheck,
-    Zap: Zap,
-    Lock: Lock,
-    Globe: Globe,
+    Shield: ShieldAlert, Gamepad2: Gamepad2, MessageSquare: MessageSquare,
+    Users: UserCheck, Zap: Zap, Lock: Lock, Globe: Globe,
   };
 
-  const renderIcon = (iconName: string) => {
-    const IconComp = CATEGORY_ICON_MAP[iconName];
-    if (!IconComp) return null;
-    return <IconComp className="h-4 w-4" />;
-  };
+  const CurrentIcon = CATEGORY_ICON_MAP[category.icon] || ShieldAlert;
 
   return (
-    <div ref={ref} className="p-6 sm:p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 flex-1">
-          <div className="space-y-4">
-            <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Category Title</Label>
-              <Input value={category.title} onChange={e => onUpdate(category.id, { title: e.target.value })} placeholder="Category name" />
-            </div>
-            <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Icon</Label>
-              <Combobox value={category.icon || ""} onValueChange={icon => onUpdate(category.id, { icon: icon || undefined })}>
-                <ComboboxInput placeholder="Search icons..." value={searchValue} onChange={e => setSearchValue(e.target.value)} />
-                <ComboboxContent>
-                  <ComboboxList>
-                    {filteredIcons.map(icon => (
-                      <ComboboxItem key={icon} value={icon} className="flex items-center gap-2">
-                        {renderIcon(icon)}
-                        {icon}
-                      </ComboboxItem>
-                    ))}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-            </div>
-            <div className="flex flex-col items-center justify-center p-4 bg-zinc-100 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-              {(() => {
-                const Icon = CATEGORY_ICON_MAP[category.icon] || ShieldAlert;
-                return <><Icon className="h-8 w-8 text-brand-accent mb-2" /><Text size="xxs" variant="muted" className="uppercase font-bold tracking-widest">{category.icon}</Text></>;
-              })()}
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-[10px] uppercase tracking-widest">Rules</Label>
-              <Button variant="ghost" size="sm" onClick={onAddRule}><Plus className="h-3.5 w-3.5 mr-1" />Add Rule</Button>
-            </div>
-            {category.rules.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-                <Text variant="muted" size="sm">No rules in this category. Click &quot;Add Rule&quot; to create one.</Text>
-              </div>
-            ) : (
-              <div className="grid gap-3">
-                {category.rules.map(rule => (
-                  <div key={rule.id} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/50">
-                    <div className="flex-1 grid gap-2">
-                      <Input value={rule.title} onChange={e => onUpdateRule(rule.id, { title: e.target.value })} placeholder="Rule title" className="h-8" />
-                      <Textarea value={rule.desc} onChange={e => onUpdateRule(rule.id, { desc: e.target.value })} placeholder="Description" rows={2} className="text-sm" />
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive shrink-0" onClick={() => { if (window.confirm("Delete this rule?")) onDeleteRule(rule.id); }}>
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive shrink-0" onClick={() => { if (window.confirm("Delete this category and all its rules?")) onDelete(); }}>
-          <Trash className="h-5 w-5" />
-        </Button>
+    <div ref={ref} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+      <div className="flex items-center gap-4 p-4 border-b border-zinc-100 dark:border-zinc-800">
+        <button onClick={() => setExpanded(!expanded)} className="h-10 w-10 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+          <CurrentIcon className="h-5 w-5" />
+        </button>
+        <Input
+          value={category.title}
+          onChange={e => onUpdate(category.id, { title: e.target.value })}
+          className="flex-1 h-10 font-semibold text-lg"
+          placeholder="Category title"
+        />
+        <Combobox value={category.icon} onValueChange={icon => onUpdate(category.id, { icon: icon || undefined })}>
+          <ComboboxInput placeholder="Icon" className="w-28" />
+          <ComboboxContent>
+            <ComboboxList>
+              {filteredIcons.map(icon => {
+                const Icon = CATEGORY_ICON_MAP[icon];
+                return <ComboboxItem key={icon} value={icon} className="flex items-center gap-2"><Icon className="h-4 w-4" />{icon}</ComboboxItem>;
+              })}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+        <button
+          onClick={() => { if (window.confirm("Delete this category?")) onDelete(); }}
+          className="h-10 w-10 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors"
+        >
+          <Trash className="h-4 w-4" />
+        </button>
       </div>
+
+      {expanded && (
+        <div className="p-4 space-y-3">
+          {category.rules.length === 0 && (
+            <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+              <Text variant="muted" size="sm">No rules in this category</Text>
+            </div>
+          )}
+          {category.rules.map(rule => (
+            <RuleRow key={rule.id} rule={rule} onUpdate={onUpdateRule} onDelete={onDeleteRule} />
+          ))}
+          <Button variant="outline" size="sm" onClick={onAddRule} className="w-full gap-2">
+            <Plus className="h-4 w-4" /> Add Rule
+          </Button>
+        </div>
+      )}
     </div>
   );
 }));
-RuleCategoryRow.displayName = "RuleCategoryRow";
+RuleCategoryCard.displayName = "RuleCategoryCard";
 
 // ═══════════════════════════════════════════════
 // SERVER TAB
@@ -617,60 +676,102 @@ function ServerTab() {
       const res = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ config }) });
       if (!res.ok) throw new Error();
       setInitialConfig(config);
-      toast.success("Server config saved!");
-    } catch { toast.error("Save failed!"); }
+      toast.success("Server config saved");
+    } catch { toast.error("Save failed"); }
     setSaving(false);
   }
 
-  if (loading) return <div className="grid gap-6"><Skeleton className="h-48 w-full rounded-xl" /></div>;
+  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
 
   return (
-    <div>
-      <div className="mb-6">
-        <Text size="lg" weight="semibold">Server Configuration</Text>
-        <Text size="sm" variant="muted" className="mt-1">Manage your Minecraft server addresses. Changes will update across the entire site.</Text>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+          <Server className="h-7 w-7 text-brand-accent" />
+          Server Configuration
+        </h2>
+        <Text variant="muted" className="mt-1">Manage your Minecraft server addresses</Text>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Java Edition */}
-        <div className="p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 space-y-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Server className="h-5 w-5 text-brand-accent" />
-            <Text weight="semibold">Java Edition</Text>
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+              <Monitor className="h-6 w-6 text-green-500" />
+            </div>
+            <div>
+              <Text weight="semibold" className="text-lg">Java Edition</Text>
+              <Text size="xs" variant="muted">PC/Mac players</Text>
+            </div>
           </div>
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">IP Address</Label>
-            <Input value={config.javaIp} onChange={e => setConfig(c => ({ ...c, javaIp: e.target.value }))} placeholder="play.example.com" />
-          </div>
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Port</Label>
-            <Input type="number" value={config.javaPort} onChange={e => setConfig(c => ({ ...c, javaPort: parseInt(e.target.value) || 25565 }))} />
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">IP Address</Label>
+              <Input
+                value={config.javaIp}
+                onChange={e => setConfig(c => ({ ...c, javaIp: e.target.value }))}
+                placeholder="play.example.com"
+                className="h-12 text-base"
+              />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Port</Label>
+              <Input
+                type="number"
+                value={config.javaPort}
+                onChange={e => setConfig(c => ({ ...c, javaPort: parseInt(e.target.value) || 25565 }))}
+                className="h-12"
+              />
+            </div>
           </div>
         </div>
 
         {/* Bedrock Edition */}
-        <div className="p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 space-y-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Server className="h-5 w-5 text-brand-accent" />
-            <Text weight="semibold">Bedrock Edition</Text>
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Wifi className="h-6 w-6 text-blue-500" />
+            </div>
+            <div>
+              <Text weight="semibold" className="text-lg">Bedrock Edition</Text>
+              <Text size="xs" variant="muted">Mobile/Console/PC</Text>
+            </div>
           </div>
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">IP Address</Label>
-            <Input value={config.bedrockIp} onChange={e => setConfig(c => ({ ...c, bedrockIp: e.target.value }))} placeholder="bedrock.example.com" />
-          </div>
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Port</Label>
-            <Input type="number" value={config.bedrockPort} onChange={e => setConfig(c => ({ ...c, bedrockPort: parseInt(e.target.value) || 19132 }))} />
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">IP Address</Label>
+              <Input
+                value={config.bedrockIp}
+                onChange={e => setConfig(c => ({ ...c, bedrockIp: e.target.value }))}
+                placeholder="bedrock.example.com"
+                className="h-12 text-base"
+              />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Port</Label>
+              <Input
+                type="number"
+                value={config.bedrockPort}
+                onChange={e => setConfig(c => ({ ...c, bedrockPort: parseInt(e.target.value) || 19132 }))}
+                className="h-12"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-8 flex gap-2">
-        <Button onClick={save} disabled={saving || !isDirty}>
-          {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
+      <div className="flex items-center gap-3 p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl">
+        <div className="flex-1">
+          <Text size="sm" variant="muted">
+            {isDirty ? "You have unsaved changes" : "All changes saved"}
+          </Text>
+        </div>
+        <Button variant="outline" onClick={() => { setConfig(initialConfig); toast("Changes discarded"); }} disabled={!isDirty}>
+          Cancel
         </Button>
-        <Button variant="ghost" onClick={() => { setConfig(initialConfig); toast("Reverted"); }} disabled={!isDirty}>
-          <X className="h-4 w-4 mr-2" />Cancel
+        <Button onClick={save} disabled={saving || !isDirty}>
+          {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
         </Button>
       </div>
     </div>
@@ -686,14 +787,21 @@ function generatePassword(length = 16) {
   return Array.from(crypto.getRandomValues(new Uint8Array(length)), b => chars[b % chars.length]).join("");
 }
 
-function AccountsTab() {
+function AccountsTab({ userRoles }: { userRoles: AdminRole[] }) {
+  const canManageAdmins = hasPermission(userRoles, "MANAGE_ADMINS");
+  const canManageRoles = hasPermission(userRoles, "MANAGE_ROLES");
+  const canManagePassword = hasPermission(userRoles, "MANAGE_PASSWORD");
+
   const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  // New account form
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editUsername, setEditUsername] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editRoles, setEditRoles] = useState<AdminRole[]>([]);
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState(() => generatePassword());
+  const [newRoles, setNewRoles] = useState<AdminRole[]>(["admin"]);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -703,6 +811,48 @@ function AccountsTab() {
     }).catch(() => { setLoading(false); toast.error("Failed to load accounts"); });
   }, []);
 
+  function startEdit(admin: AdminAccount) {
+    setEditingId(admin.id);
+    setEditUsername(admin.username);
+    setEditPassword("");
+    setEditRoles([...admin.roles]);
+  }
+
+  async function saveEdit() {
+    if (!editingId) return;
+    setSaving(true);
+    try {
+      const body: { username?: string; password?: string; roles?: AdminRole[] } = {};
+      const currentAdmin = admins.find(a => a.id === editingId);
+      if (editUsername !== currentAdmin?.username) body.username = editUsername;
+      if (editPassword) body.password = editPassword;
+      if (!deepEquals(editRoles.sort(), currentAdmin?.roles.sort())) body.roles = editRoles;
+
+      if (Object.keys(body).length === 0) {
+        setEditingId(null);
+        setSaving(false);
+        return;
+      }
+
+      const res = await fetch(`/api/admins/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      
+      setAdmins(prev => prev.map(a => 
+        a.id === editingId 
+          ? { ...a, username: editUsername || a.username, roles: editRoles }
+          : a
+      ));
+      setEditingId(null);
+      toast.success("Account updated");
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to update account"); }
+    setSaving(false);
+  }
+
   async function createAdmin() {
     if (!newUsername.trim()) { toast.error("Username is required"); return; }
     if (newPassword.length < 6) { toast.error("Password must be at least 6 characters"); return; }
@@ -711,107 +861,235 @@ function AccountsTab() {
       const res = await fetch("/api/admins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: newUsername.trim(), password: newPassword }),
+        body: JSON.stringify({ username: newUsername.trim(), password: newPassword, roles: newRoles }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
-      setAdmins(prev => [...prev, { id: data.id, username: newUsername.trim() }]);
-      toast.success(`Account "${newUsername.trim()}" created!`);
+      setAdmins(prev => [...prev, { id: data.id, username: newUsername.trim(), roles: newRoles }]);
+      toast.success(`Account created`);
       setNewUsername("");
       setNewPassword(generatePassword());
-      setShowPassword(false);
+      setNewRoles(["admin"]);
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to create account"); }
     setSaving(false);
   }
 
   async function deleteAdmin(id: string, name: string) {
-    if (!window.confirm(`Delete admin "${name}"? They will no longer be able to log in.`)) return;
+    if (!window.confirm(`Delete admin "${name}"?`)) return;
     try {
       const res = await fetch(`/api/admins/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       setAdmins(prev => prev.filter(a => a.id !== id));
-      toast.success(`Account "${name}" deleted`);
+      toast.success("Account deleted");
     } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to delete"); }
   }
 
-  if (loading) return <div className="grid gap-6"><Skeleton className="h-48 w-full rounded-xl" /></div>;
+  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
 
   return (
-    <div>
-      <div className="mb-6">
-        <Text size="lg" weight="semibold">Admin Accounts</Text>
-        <Text size="sm" variant="muted" className="mt-1">Manage who can access this admin dashboard.</Text>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+            <KeyRound className="h-7 w-7 text-brand-accent" />
+            Admin Accounts
+          </h2>
+          <Text variant="muted" className="mt-1">Manage dashboard access and permissions</Text>
+        </div>
       </div>
 
-      {/* Existing Admins */}
-      <div className="grid gap-4 mb-10">
-        {admins.map(admin => (
-          <div key={admin.id} className="flex items-center justify-between p-5 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                <KeyRound className="h-4 w-4 text-brand-accent" />
-              </div>
-              <div>
-                <Text weight="semibold">{admin.username}</Text>
-                <Text size="xxs" variant="muted">Administrator</Text>
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center justify-between">
+            <Text weight="semibold">Existing Accounts</Text>
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-500">Owner</span>
+              <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-500">Developer</span>
+              <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500">Admin</span>
+            </div>
+          </div>
+        </div>
+        <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          {admins.map(admin => (
+            <div key={admin.id} className="p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+              {editingId === admin.id ? (
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Username</Label>
+                      <Input
+                        value={editUsername}
+                        onChange={e => setEditUsername(e.target.value)}
+                        className="h-10"
+                      />
+                    </div>
+                    {canManagePassword && (
+                      <div>
+                        <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">New Password (optional)</Label>
+                        <Input
+                          type="password"
+                          value={editPassword}
+                          onChange={e => setEditPassword(e.target.value)}
+                          placeholder="Leave empty to keep current"
+                          className="h-10"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {canManageRoles && (
+                    <div>
+                      <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Roles</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {(Object.keys(ADMIN_ROLES) as AdminRole[]).map(role => (
+                          <button
+                            key={role}
+                            onClick={() => {
+                              if (editRoles.includes(role)) {
+                                if (editRoles.length > 1) {
+                                  setEditRoles(prev => prev.filter(r => r !== role));
+                                }
+                              } else {
+                                setEditRoles(prev => [...prev, role]);
+                              }
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                              editRoles.includes(role)
+                                ? cn(ADMIN_ROLES[role].bg, ADMIN_ROLES[role].color)
+                                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                            )}
+                          >
+                            {ADMIN_ROLES[role].label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={saveEdit} disabled={saving}>
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      <span className="ml-2">Save</span>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-brand-accent/10 flex items-center justify-center">
+                      <KeyRound className="h-5 w-5 text-brand-accent" />
+                    </div>
+                    <div>
+                      <Text weight="semibold">{admin.username}</Text>
+                      <div className="flex gap-1 mt-1">
+                        {admin.roles.map(role => (
+                          <span key={role} className={cn("px-2 py-0.5 rounded text-[10px] font-bold", ADMIN_ROLES[role].bg, ADMIN_ROLES[role].color)}>
+                            {ADMIN_ROLES[role].label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => startEdit(admin)}>
+                      Edit
+                    </Button>
+                    {canManageAdmins && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                        onClick={() => deleteAdmin(admin.id, admin.username)}
+                        disabled={admins.length <= 1}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {canManageAdmins && (
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
+          <Text weight="semibold" className="mb-4 block">Create New Account</Text>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Username</Label>
+              <Input
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                placeholder="admin_username"
+                className="h-11"
+              />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Password</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    className="h-11 pr-24"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => { navigator.clipboard.writeText(newPassword); toast.success("Copied"); }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <Button type="button" variant="outline" size="icon" onClick={() => setNewPassword(generatePassword())} title="Generate new password">
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-            <Button
-              variant="ghost" size="icon"
-              className="text-zinc-400 hover:text-destructive hover:bg-destructive/10 transition-colors"
-              onClick={() => deleteAdmin(admin.id, admin.username)}
-              disabled={admins.length <= 1}
-            >
-              <Trash className="h-4 w-4" />
+          </div>
+          {canManageRoles && (
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Roles</Label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(ADMIN_ROLES) as AdminRole[]).map(role => (
+                  <button
+                    key={role}
+                    onClick={() => {
+                      if (newRoles.includes(role)) {
+                        if (newRoles.length > 1) {
+                          setNewRoles(prev => prev.filter(r => r !== role));
+                        }
+                      } else {
+                        setNewRoles(prev => [...prev, role]);
+                      }
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                      newRoles.includes(role)
+                        ? cn(ADMIN_ROLES[role].bg, ADMIN_ROLES[role].color)
+                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                    )}
+                  >
+                    {ADMIN_ROLES[role].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-4 flex justify-end">
+            <Button onClick={createAdmin} disabled={saving || !newUsername.trim()}>
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Creating...</> : <><Plus className="h-4 w-4 mr-2" />Create Account</>}
             </Button>
           </div>
-        ))}
-      </div>
-
-      {/* Create New Admin */}
-      <div className="p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="flex items-center gap-2 mb-6">
-          <Plus className="h-5 w-5 text-brand-accent" />
-          <Text weight="semibold">Create New Admin</Text>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Username</Label>
-            <Input value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder="NewAdmin" />
-          </div>
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Password</Label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  className="pr-20"
-                />
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex gap-1">
-                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </Button>
-                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(newPassword); toast.success("Password copied!"); }}>
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-              <Button type="button" variant="outline" size="icon" onClick={() => setNewPassword(generatePassword())} title="Generate new password">
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-            <Text size="xxs" variant="muted" className="mt-1">Auto-generated 16-character password. Edit or copy before saving.</Text>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button onClick={createAdmin} disabled={saving || !newUsername.trim()}>
-            {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating…</> : <><Plus className="h-4 w-4 mr-2" />Create Account</>}
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -879,8 +1157,8 @@ function BlogTab() {
       setInitialPosts(posts);
       setEditingPost(null);
       setIsCreating(false);
-      toast.success(isCreating ? "Post created!" : "Post saved!");
-    } catch { toast.error("Save failed!"); }
+      toast.success(isCreating ? "Post created" : "Post saved");
+    } catch { toast.error("Save failed"); }
     setSaving(false);
   }, [editingPost, isCreating, posts]);
 
@@ -891,73 +1169,76 @@ function BlogTab() {
       if (!res.ok) throw new Error();
       setPosts(prev => prev.filter(p => p.slug !== slug));
       toast.success("Post deleted");
-    } catch { toast.error("Delete failed!"); }
+    } catch { toast.error("Delete failed"); }
   }, []);
 
   const updateEditingPost = useCallback((patch: Partial<BlogPost>) => {
     setEditingPost(prev => prev ? { ...prev, ...patch } : null);
   }, []);
 
-  if (loading) return <div className="grid gap-6"><Skeleton className="h-48 w-full rounded-xl" /></div>;
+  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <Text size="lg" weight="semibold">Blog Posts</Text>
-        <Button variant="outline" size="sm" onClick={createPost}><Plus className="h-4 w-4 mr-2" />New Post</Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+            <FileText className="h-7 w-7 text-brand-accent" />
+            Blog Posts
+          </h2>
+          <Text variant="muted" className="mt-1">Create and manage blog content</Text>
+        </div>
+        <Button onClick={createPost} className="gap-2">
+          <Plus className="h-4 w-4" /> New Post
+        </Button>
       </div>
 
       {editingPost ? (
-        <div ref={newPostRef} className="p-6 sm:p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm space-y-6">
+        <div ref={newPostRef} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <Text size="lg" weight="semibold">{isCreating ? "Create New Post" : "Edit Post"}</Text>
+            <Text weight="semibold" className="text-lg">{isCreating ? "Create New Post" : "Edit Post"}</Text>
             <Button variant="ghost" size="sm" onClick={() => { setEditingPost(null); setIsCreating(false); }}>Cancel</Button>
           </div>
-          
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Title</Label>
-              <Input value={editingPost.title} onChange={e => updateEditingPost({ title: e.target.value })} placeholder="Post title" />
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Title</Label>
+              <Input value={editingPost.title} onChange={e => updateEditingPost({ title: e.target.value })} placeholder="Post title" className="h-11" />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Slug</Label>
-              <Input value={editingPost.slug} onChange={e => updateEditingPost({ slug: e.target.value })} placeholder="post-slug" />
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Slug</Label>
+              <Input value={editingPost.slug} onChange={e => updateEditingPost({ slug: e.target.value })} placeholder="post-slug" className="h-11" />
             </div>
           </div>
 
           <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Excerpt</Label>
+            <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Excerpt</Label>
             <Textarea value={editingPost.excerpt} onChange={e => updateEditingPost({ excerpt: e.target.value })} placeholder="Short description..." rows={2} />
           </div>
 
           <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Content</Label>
+            <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Content</Label>
             <RichTextEditor content={editingPost.content} onChange={content => updateEditingPost({ content })} placeholder="Write your blog post content..." />
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Author</Label>
-              <Input value={editingPost.author} onChange={e => updateEditingPost({ author: e.target.value })} placeholder="Author name" />
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Author</Label>
+              <Input value={editingPost.author} onChange={e => updateEditingPost({ author: e.target.value })} className="h-11" />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Date</Label>
-              <Input type="date" value={editingPost.publishedAt} onChange={e => updateEditingPost({ publishedAt: e.target.value })} />
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Date</Label>
+              <Input type="date" value={editingPost.publishedAt} onChange={e => updateEditingPost({ publishedAt: e.target.value })} className="h-11" />
             </div>
             <div>
-              <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Cover Image URL</Label>
-              <Input value={editingPost.coverImage || ""} onChange={e => updateEditingPost({ coverImage: e.target.value })} placeholder="https://..." />
+              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Cover Image</Label>
+              <Input value={editingPost.coverImage || ""} onChange={e => updateEditingPost({ coverImage: e.target.value })} placeholder="https://..." className="h-11" />
             </div>
           </div>
 
-          <div>
-            <Label className="text-[10px] uppercase tracking-widest mb-1.5 block">Tags (comma separated)</Label>
-            <Input value={editingPost.tags.join(", ")} onChange={e => updateEditingPost({ tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) })} placeholder="news, update, announcement" />
-          </div>
-
-          <div className="flex gap-2">
+          <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
             <Button onClick={savePost} disabled={saving}>
-              {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4 mr-2" />Save Post</>}
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Post</>}
             </Button>
             {!isCreating && (
               <Button variant="destructive" onClick={() => { if (window.confirm("Delete this post?")) deletePost(editingPost.slug); }}>
@@ -967,30 +1248,36 @@ function BlogTab() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
           {posts.length === 0 && (
-            <div className="text-center py-20 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-              <Text variant="muted">No blog posts yet. Click &quot;New Post&quot; to create one.</Text>
+            <div className="text-center py-16">
+              <FileText className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
+              <Text variant="muted">No blog posts yet</Text>
+              <Button variant="outline" className="mt-4" onClick={createPost}>
+                <Plus className="h-4 w-4 mr-2" /> Create your first post
+              </Button>
             </div>
           )}
-          {posts.map((post) => (
-            <div key={post.slug} className="p-6 rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-sm flex items-center justify-between hover:shadow-md transition-all duration-300">
-              <div className="flex-1 min-w-0">
-                <Text weight="semibold" className="truncate">{post.title}</Text>
-                <div className="flex items-center gap-2 mt-1">
-                  <Text size="xs" variant="muted">{post.publishedAt}</Text>
-                  <span className="text-zinc-300">•</span>
-                  <Text size="xs" variant="muted" className="truncate">{post.excerpt}</Text>
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+            {posts.map((post) => (
+              <div key={post.slug} className="flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <Text weight="semibold" className="truncate">{post.title}</Text>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Text size="xs" variant="muted">{post.publishedAt}</Text>
+                    <span className="text-zinc-300">•</span>
+                    <Text size="xs" variant="muted" className="truncate">{post.excerpt}</Text>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <Button variant="ghost" size="sm" onClick={() => editPost(post)}>Edit</Button>
+                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => { if (window.confirm("Delete this post?")) deletePost(post.slug); }}>
+                    <Trash className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2 ml-4">
-                <Button variant="ghost" size="sm" onClick={() => editPost(post)}>Edit</Button>
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive" onClick={() => { if (window.confirm("Delete this post?")) deletePost(post.slug); }}>
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

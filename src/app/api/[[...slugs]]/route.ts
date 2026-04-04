@@ -4,12 +4,12 @@ import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
-import mysql from "mysql2/promise";
 
 const DATA_PATH = path.join(process.cwd(), "src/data/staff.ts");
 const RULES_DATA_PATH = path.join(process.cwd(), "src/data/rules.ts");
 const ADMIN_DATA_PATH = path.join(process.cwd(), "src/data/admin.ts");
 const BLOG_DATA_PATH = path.join(process.cwd(), "src/data/blog.ts");
+const CONFIG_PATH = path.join(process.cwd(), "src/data/server-config.json");
 const UPLOAD_DIR = path.join(process.cwd(), "public/staff");
 
 type BlogPost = {
@@ -23,40 +23,53 @@ type BlogPost = {
   tags: string[];
 };
 
-const db = mysql.createPool({
-  host: "panel.devflare.de",
-  port: 3306,
-  user: "u3_onTMMeUESm",
-  password: "y2^zK=cbs2L42AJUDuDw0MkX",
-  database: "s3_nexusmines_web",
-});
+const defaultServerConfig = { javaIp: "nexusmines.minekeep.gg", bedrockIp: "nexusmines.bedrock.minekeep.gg", javaPort: 25565, bedrockPort: 19132 };
 
-async function getConfigFromDb() {
+function getConfig() {
   try {
-    await db.execute("CREATE TABLE IF NOT EXISTS config (id INT PRIMARY KEY DEFAULT 1, javaIp VARCHAR(255), bedrockIp VARCHAR(255), javaPort INT, bedrockPort INT)");
-    const [rows] = await db.execute("SELECT * FROM config LIMIT 1");
-    const config = rows as { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number }[];
-    if (config.length > 0 && config[0].javaIp) {
-      return config[0];
+    if (fs.existsSync(CONFIG_PATH)) {
+      return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
     }
-    const defaultConfig = { javaIp: "nexusmines.minekeep.gg", bedrockIp: "nexusmines.bedrock.minekeep.gg", javaPort: 25565, bedrockPort: 19132 };
-    await db.execute("INSERT INTO config (id, javaIp, bedrockIp, javaPort, bedrockPort) VALUES (1, ?, ?, ?, ?)", 
-      [defaultConfig.javaIp, defaultConfig.bedrockIp, defaultConfig.javaPort, defaultConfig.bedrockPort]);
-    return defaultConfig;
   } catch (e) {
-    console.error("Error loading config from DB:", e);
-    return { javaIp: "nexusmines.minekeep.gg", bedrockIp: "nexusmines.bedrock.minekeep.gg", javaPort: 25565, bedrockPort: 19132 };
+    console.error("Error loading config:", e);
   }
+  return defaultServerConfig;
 }
 
-async function saveConfigToDb(config: { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number }) {
-  await db.execute("UPDATE config SET javaIp = ?, bedrockIp = ?, javaPort = ?, bedrockPort = ?", 
-    [config.javaIp, config.bedrockIp, config.javaPort, config.bedrockPort]);
+function saveConfig(config: { javaIp: string; bedrockIp: string; javaPort: number; bedrockPort: number }) {
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
 }
 
 // Ensure upload directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+type AdminRole = "owner" | "developer" | "admin";
+
+type Admin = {
+  id: string;
+  username: string;
+  passwordHash: string;
+  roles: AdminRole[];
+};
+
+const PERMISSIONS = {
+  MANAGE_ADMINS: ["owner", "developer", "admin"] as AdminRole[],
+  MANAGE_ROLES: ["owner", "developer", "admin"] as AdminRole[],
+  MANAGE_PASSWORD: ["owner", "developer"] as AdminRole[],
+};
+
+function hasPermission(userRoles: AdminRole[], permission: keyof typeof PERMISSIONS): boolean {
+  return userRoles.some(role => PERMISSIONS[permission].includes(role));
+}
+
+async function getCurrentUserRoles(): Promise<AdminRole[]> {
+  const session = await getSession();
+  if (!session.adminId) return [];
+  const admins = readAdmins();
+  const currentAdmin = admins.find(a => a.id === session.adminId);
+  return currentAdmin?.roles || [];
 }
 
 function readAdmins() {
@@ -66,19 +79,22 @@ function readAdmins() {
     if (match) {
       let arrayStr = match[1].trim();
       if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
-      return new Function(`return ${arrayStr}`)() as { id: string; username: string; passwordHash: string }[];
+      return new Function(`return ${arrayStr}`)() as Admin[];
     }
     return [];
   } catch { return []; }
 }
 
-function writeAdmins(admins: { id: string; username: string; passwordHash: string }[]) {
+function writeAdmins(admins: Admin[]) {
   const fileContent = `// src/data/admin.ts
+
+export type AdminRole = "owner" | "developer" | "admin";
 
 export type Admin = {
   id: string;
   username: string;
   passwordHash: string;
+  roles: AdminRole[];
 };
 
 export const admins: Admin[] = ${JSON.stringify(admins, null, 2)};
@@ -89,7 +105,12 @@ export const admins: Admin[] = ${JSON.stringify(admins, null, 2)};
 const app = new Elysia({ prefix: "/api" })
   .get("/auth/status", async () => {
     const session = await getSession();
-    return { isLoggedIn: session.isLoggedIn, username: session.username || null };
+    const roles = await getCurrentUserRoles();
+    return { 
+      isLoggedIn: session.isLoggedIn, 
+      username: session.username || null,
+      roles
+    };
   })
   .get("/staff", () => {
     try {
@@ -181,13 +202,13 @@ export const rules: RuleCategory[] = ${JSON.stringify(rules, null, 2)};
   })
   // ─── Config ───
   .get("/config", async () => {
-    return await getConfigFromDb();
+    return getConfig();
   })
   .post("/config", async ({ body, set }) => {
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
     try {
-      await saveConfigToDb(body.config);
+      saveConfig(body.config);
       return { ok: true };
     } catch (e) {
       console.error("Error saving config:", e);
@@ -203,23 +224,68 @@ export const rules: RuleCategory[] = ${JSON.stringify(rules, null, 2)};
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
     const admins = readAdmins();
-    return admins.map(a => ({ id: a.id, username: a.username }));
+    return admins.map(a => ({ id: a.id, username: a.username, roles: a.roles }));
   })
   .post("/admins", async ({ body, set }) => {
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    const userRoles = await getCurrentUserRoles();
+    if (!hasPermission(userRoles, "MANAGE_ADMINS")) {
+      set.status = 403; return { error: "Permission denied" };
+    }
     const admins = readAdmins();
     const hash = await bcrypt.hash(body.password, 10);
-    const newAdmin = { id: crypto.randomUUID(), username: body.username, passwordHash: hash };
+    const newAdmin = { 
+      id: crypto.randomUUID(), 
+      username: body.username, 
+      passwordHash: hash,
+      roles: body.roles || ["admin"] as AdminRole[]
+    };
     admins.push(newAdmin);
     writeAdmins(admins);
     return { ok: true, id: newAdmin.id };
   }, {
-    body: t.Object({ username: t.String(), password: t.String() })
+    body: t.Object({ 
+      username: t.String(), 
+      password: t.String(),
+      roles: t.Array(t.Union([t.Literal("owner"), t.Literal("developer"), t.Literal("admin")])),
+    })
+  })
+  .patch("/admins/:id", async ({ params, body, set }) => {
+    const session = await getSession();
+    if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    const userRoles = await getCurrentUserRoles();
+    
+    const admins = readAdmins();
+    const adminIndex = admins.findIndex(a => a.id === params.id);
+    if (adminIndex === -1) { set.status = 404; return { error: "Admin not found" }; }
+    
+    const targetAdmin = admins[adminIndex];
+    
+    if (body.username) targetAdmin.username = body.username;
+    if (body.roles && hasPermission(userRoles, "MANAGE_ROLES")) {
+      targetAdmin.roles = body.roles;
+    }
+    if (body.password && hasPermission(userRoles, "MANAGE_PASSWORD")) {
+      targetAdmin.passwordHash = await bcrypt.hash(body.password, 10);
+    }
+    
+    writeAdmins(admins);
+    return { ok: true };
+  }, {
+    body: t.Object({
+      username: t.Optional(t.String()),
+      password: t.Optional(t.String()),
+      roles: t.Optional(t.Array(t.Union([t.Literal("owner"), t.Literal("developer"), t.Literal("admin")]))),
+    })
   })
   .delete("/admins/:id", async ({ params, set }) => {
     const session = await getSession();
     if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    const userRoles = await getCurrentUserRoles();
+    if (!hasPermission(userRoles, "MANAGE_ADMINS")) {
+      set.status = 403; return { error: "Permission denied" };
+    }
     let admins = readAdmins();
     if (admins.length <= 1) { set.status = 400; return { error: "Cannot delete the last admin" }; }
     admins = admins.filter(a => a.id !== params.id);
