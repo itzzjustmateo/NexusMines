@@ -204,26 +204,25 @@ export function Navbar() {
 
           <ModeToggle />
 
-          {/* Admin Dashboard Link */}
+          {/* Admin Dashboard Icon */}
           {isAdmin && (
-            <div className="hidden lg:flex items-center">
-              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-2" />
-              <Link
-                href="/admin"
-                className={cn(
-                  "group relative rounded-xl px-3 py-2 flex items-center gap-2 transition-all duration-300 font-semibold text-xs tracking-tight border animate-in fade-in select-none ml-2",
-                  pathname === "/admin"
-                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800 shadow-sm"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
-                )}
-              >
-                <Settings className={cn("h-3.5 w-3.5 transition-all duration-300", pathname === "/admin" ? "text-brand-accent scale-110" : "group-hover:scale-110")} />
-                <span className="hidden sm:inline">Admin</span>
-                {pathname === "/admin" && (
-                  <span className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-accent shadow-[0_0_8px_rgba(var(--brand-accent-rgb),1)] animate-in zoom-in-0 duration-500" />
-                )}
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="rounded-xl relative transition-all duration-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 group h-10 w-10 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hidden sm:flex"
+            >
+              <Link href="/admin">
+                <Settings className={cn(
+                  "h-[1.1rem] w-[1.1rem] transition-colors",
+                  pathname === "/admin" ? "text-brand-accent" : "text-zinc-500 group-hover:text-zinc-900 dark:group-hover:text-white"
+                )} />
+                <span className="sr-only">Admin Dashboard</span>
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-[10px] px-2 py-px rounded bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 whitespace-nowrap z-50">
+                  Admin
+                </span>
               </Link>
-            </div>
+            </Button>
           )}
 
           <Button

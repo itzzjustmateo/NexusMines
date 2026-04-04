@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils";
 interface AddressCopyProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string;
   label: string;
-  icon?: boolean;
+  showLabel?: boolean;
   type?: "java" | "bedrock" | "store";
 }
 
 export function AddressCopy({
   value,
   label,
-  icon = true,
+  showLabel = true,
   type = "java",
   className,
   ...props
@@ -61,7 +61,7 @@ export function AddressCopy({
       )} />
       
       <div className="relative z-10 flex items-center gap-2.5">
-        {icon && (
+        {showLabel && (
           <span className="flex items-center gap-1.5">
             <span
               className={cn(
@@ -79,7 +79,9 @@ export function AddressCopy({
         </span>
       </div>
       
-      <div className="relative z-10 h-4 w-px bg-zinc-200 dark:bg-zinc-700 mx-1" />
+      {showLabel && (
+        <div className="relative z-10 h-4 w-px bg-zinc-200 dark:bg-zinc-700 mx-1" />
+      )}
       
       <div className="relative z-10 h-4 w-4 flex items-center justify-center">
         <Check

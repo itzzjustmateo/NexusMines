@@ -9,7 +9,14 @@ import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount } fr
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { config } from "@/data/config";
+import { config as defaultConfig } from "@/data/config";
+
+interface ServerConfig {
+  javaIp: string;
+  bedrockIp: string;
+  javaPort: number;
+  bedrockPort: number;
+}
 
 interface Player {
   name: string;
@@ -29,12 +36,22 @@ export function StatusCard() {
   const [status, setStatus] = React.useState<ServerStatus | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
+  const [javaIp, setJavaIp] = React.useState(defaultConfig.javaIp);
+
+  React.useEffect(() => {
+    fetch("/api/config")
+      .then(res => res.json())
+      .then((data: ServerConfig) => {
+        if (data.javaIp) setJavaIp(data.javaIp);
+      })
+      .catch(console.error);
+  }, []);
 
   const fetchStatus = React.useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
-      const res = await fetch(`https://api.mcsrvstat.us/3/${config.javaIp}`);
+      const res = await fetch(`https://api.mcsrvstat.us/3/${javaIp}`);
       const data = await res.json();
       setStatus({
         online: data.online,
@@ -46,7 +63,7 @@ export function StatusCard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [javaIp]);
 
   React.useEffect(() => {
     fetchStatus();
@@ -108,7 +125,7 @@ export function StatusCard() {
           </div>
           <div className="flex flex-col -space-y-0.5">
             <Text size="xxs" weight="bold" className="text-emerald-500 uppercase tracking-wider">Live</Text>
-            <Text size="xxs" weight="medium" variant="muted" className="truncate max-w-[100px]">{config.javaIp}</Text>
+            <Text size="xxs" weight="medium" variant="muted" className="truncate max-w-[100px]">{javaIp}</Text>
           </div>
         </div>
 

@@ -1,12 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Text } from "@/components/ui/text";
 import { AddressCopy } from "@/components/ui/address-copy";
 import { Card, CardContent } from "@/components/ui/card";
 import { MousePointer2, Rocket, PlayCircle } from "lucide-react";
-import { config } from "@/data/config";
+import { config as defaultConfig } from "@/data/config";
+
+interface ServerConfig {
+  javaIp: string;
+  bedrockIp: string;
+  javaPort: number;
+  bedrockPort: number;
+}
 
 export function ServerCard() {
-  const javaIp = config.javaIp;
-  const bedrockIp = config.bedrockIp;
+  const [javaIp, setJavaIp] = useState(defaultConfig.javaIp);
+  const [bedrockIp, setBedrockIp] = useState(defaultConfig.bedrockIp);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then(res => res.json())
+      .then((data: ServerConfig) => {
+        if (data.javaIp) setJavaIp(data.javaIp);
+        if (data.bedrockIp) setBedrockIp(data.bedrockIp);
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="mt-16 w-full max-w-4xl flex flex-col items-center gap-12">
