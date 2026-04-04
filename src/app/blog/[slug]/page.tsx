@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
 import { blogPosts } from "@/data/blog";
 import { Text } from "@/components/ui/text";
 import { ArrowLeft } from "lucide-react";
+import "./blog-post.css";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -68,9 +68,10 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
           </header>
 
-          <div className="prose prose-zinc dark:prose-invert max-w-none prose-headings:font-bold prose-a:text-brand-accent prose-a:no-underline hover:prose-a:underline">
-            <ReactMarkdown>{post.content}</ReactMarkdown>
-          </div>
+          <div 
+            className="blog-content"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </article>
       </div>
     </div>
