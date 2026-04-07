@@ -38,25 +38,27 @@ export function AddressCopy({
   return (
     <button
       className={cn(
-        "inline-flex items-center gap-2.5 px-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer",
+        "flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer w-full min-w-0",
         className
       )}
       onClick={copyToClipboard}
       {...props}
     >
       {showLabel && (
-        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wide shrink-0">
           {label}
         </span>
       )}
-      <span className="text-sm font-mono font-medium text-zinc-900 dark:text-zinc-100">
+      <span className="text-sm font-mono font-medium text-zinc-900 dark:text-zinc-100 truncate min-w-0">
         {value}
       </span>
-      {copied ? (
-        <Check className="h-4 w-4 text-emerald-500" />
-      ) : (
-        <Copy className="h-4 w-4 text-zinc-400" />
-      )}
+      <span className="shrink-0">
+        {copied ? (
+          <Check className="h-4 w-4 text-emerald-500" />
+        ) : (
+          <Copy className="h-4 w-4 text-zinc-400" />
+        )}
+      </span>
     </button>
   );
 }
