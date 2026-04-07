@@ -52,8 +52,8 @@ export function HeroSection() {
 
         {mounted && (
           <div className="mt-10 flex flex-wrap justify-center items-center gap-3">
-            <AddressCopy value={javaIp} label="Java" type="java" />
-            <AddressCopy value={bedrockIp} label="Bedrock" type="bedrock" />
+            <AddressCopy value={javaIp} label="Java" serverType="java" />
+            <AddressCopy value={bedrockIp} label="Bedrock" serverType="bedrock" />
           </div>
         )}
 

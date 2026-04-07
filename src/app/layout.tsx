@@ -4,14 +4,14 @@ import { JetBrains_Mono as FontMono } from "next/font/google";
 
 import "./globals.css";
 
-import { Navbar } from "@/components/ui/navbar";
-import { Footer } from "@/components/ui/footer";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { Text } from "@/components/ui/text";
 import Link from "next/link";
 import { ThemeProvider } from "@/components/provider/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/provider/providers";
+import { Navbar } from "@/components/ui/navbar";
+import { Footer } from "@/components/ui/footer";
 
 const fontSans = FontSans({
   variable: "--font-c-sans",

@@ -26,7 +26,7 @@ export function StoreCTA() {
         </div>
 
         <div className="flex flex-col items-center gap-4 z-10 w-full md:w-auto">
-          <AddressCopy value={storeUrl} label="Store" type="store" className="scale-110" />
+          <AddressCopy value={storeUrl} label="Store" serverType="store" className="scale-110" />
           <p className="text-[10px] text-zinc-500 dark:text-zinc-500 font-bold tracking-widest uppercase">
             Click to copy address
           </p>

@@ -97,7 +97,7 @@ function ServerCards({
                 </div>
               )}
             </div>
-            <AddressCopy value={javaIp} label="Java" type="java" />
+            <AddressCopy value={javaIp} label="Java" serverType="java" />
             <p className="mt-2 text-xs text-zinc-500">Port: 25565</p>
           </div>
 
@@ -111,7 +111,7 @@ function ServerCards({
                 <p className="text-xs text-zinc-500">Mobile / Console</p>
               </div>
             </div>
-            <AddressCopy value={bedrockIp} label="Bedrock" type="bedrock" />
+            <AddressCopy value={bedrockIp} label="Bedrock" serverType="bedrock" />
             <p className="mt-2 text-xs text-zinc-500">Port: 19132</p>
           </div>
         </div>

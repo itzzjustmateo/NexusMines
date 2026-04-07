@@ -5,18 +5,18 @@ import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface AddressCopyProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AddressCopyProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   value: string;
   label: string;
   showLabel?: boolean;
-  type?: "java" | "bedrock" | "store";
+  serverType?: "java" | "bedrock" | "store";
 }
 
 export function AddressCopy({
   value,
   label,
   showLabel = true,
-  type = "java",
+  serverType,
   className,
   ...props
 }: AddressCopyProps) {

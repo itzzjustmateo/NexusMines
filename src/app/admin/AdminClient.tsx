@@ -16,7 +16,7 @@ import {
   ShieldAlert, UserCheck, BugOff, MegaphoneOff, Gavel, AlertCircle,
   Clock, Heart, Star, Zap, Hammer, Lock, MessageSquare, Globe, Ghost, Sword, Axe,
   RefreshCw, Eye, EyeOff, Copy, FileText,
-  Monitor, Wifi, ArrowLeft, Home, Gamepad2
+  Monitor, Wifi, ArrowLeft, Home, Gamepad2, ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 import { logoutAction } from "../login/actions";
@@ -94,90 +94,97 @@ export default function AdminClient({ username, roles }: { username?: string; ro
     defaultValue: "staff",
     shallow: false,
   });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Left: Back link & Logo */}
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <Home className="h-4 w-4" />
-              </Link>
-              <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-accent to-indigo-600 flex items-center justify-center">
-                  <ShieldCheck className="h-4 w-4 text-white" />
-                </div>
-                <span className="font-bold text-zinc-900 dark:text-white">Admin Dashboard</span>
-              </div>
-            </div>
-
-            {/* Center: Tabs */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setTab(item.id)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                    tab === item.id
-                      ? "bg-brand-accent text-white shadow-md"
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-
-            {/* Right: User & Logout */}
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <Text size="sm" weight="semibold" className="text-zinc-900 dark:text-white">{username}</Text>
-                <Text size="xs" variant="muted">Administrator</Text>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                onClick={() => { if (window.confirm("Log out?")) logoutAction(); }}
-              >
-                Log out
-              </Button>
-            </div>
+      <header className="sticky top-0 z-40 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+          {/* Left: Back link & Logo */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <Home className="h-4 w-4" />
+            </Link>
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700 hidden sm:block" />
+            <span className="font-bold text-zinc-900 dark:text-white hidden sm:block">Admin</span>
           </div>
 
-          {/* Mobile Tabs */}
-          <div className="md:hidden flex items-center gap-1 pb-3 -mx-1 overflow-x-auto">
+          {/* Center: Tabs - Desktop */}
+          <nav className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setTab(item.id)}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shrink-0",
+                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
                   tab === item.id
-                    ? "bg-brand-accent text-white"
+                    ? "bg-zinc-900 dark:bg-zinc-700 text-white"
                     : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 )}
               >
-                <item.icon className="h-3.5 w-3.5" />
+                <item.icon className="h-4 w-4" />
                 {item.label}
               </button>
             ))}
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center gap-2"
+            >
+              <span className="text-sm font-medium">{navItems.find(n => n.id === tab)?.label}</span>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", mobileMenuOpen && "rotate-180")} />
+            </Button>
+            
+            {/* Dropdown Menu */}
+            {mobileMenuOpen && (
+              <div className="absolute top-full right-0 mt-1 w-48 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-lg overflow-hidden">
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setTab(item.id); setMobileMenuOpen(false); }}
+                    className={cn(
+                      "flex items-center gap-3 w-full px-4 py-2.5 text-sm font-medium transition-colors",
+                      tab === item.id
+                        ? "bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white"
+                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right: User & Logout */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-sm text-zinc-500 dark:text-zinc-400 hidden sm:block">{username}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs sm:text-sm"
+              onClick={() => { if (window.confirm("Log out?")) logoutAction(); }}
+            >
+              <span className="hidden sm:inline">Log out</span>
+              <span className="sm:hidden">Exit</span>
+            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8">
         {tab === "staff" && <StaffTab />}
         {tab === "rules" && <RulesTab />}
         {tab === "blog" && <BlogTab />}
@@ -198,9 +205,7 @@ function StaffTab() {
   const [initialStaff, setInitialStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
   const newMemberRef = useRef<HTMLDivElement | null>(null);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const isDirty = useMemo(() => !deepEquals(staff, initialStaff), [staff, initialStaff]);
   useWarnIfDirty(isDirty);
 
@@ -225,12 +230,10 @@ function StaffTab() {
     setStaff(prev => prev.filter(m => m.id !== id));
   }, []);
 
-  const handleImageUpload = useCallback(async ({ file, memberId, revokeOld, oldUrl }: { file: File; memberId: string; revokeOld?: boolean; oldUrl?: string }) => {
-    if (!file) return;
+  const handleImageUpload = useCallback(async (file: File, memberId: string) => {
     const previewUrl = URL.createObjectURL(file);
     updateMember(memberId, { image: previewUrl });
-    setIsUploading(u => ({ ...u, [memberId]: true }));
-    if (revokeOld && oldUrl) URL.revokeObjectURL(oldUrl);
+    
     const form = new FormData();
     form.append("file", file);
     try {
@@ -239,8 +242,7 @@ function StaffTab() {
       URL.revokeObjectURL(previewUrl);
       updateMember(memberId, { image: data.path });
     } catch { toast.error("Image upload failed"); }
-    setIsUploading(u => ({ ...u, [memberId]: false }));
-  }, [updateMember]);
+  }, []);
 
   async function save() {
     setSaving(true);
@@ -248,161 +250,114 @@ function StaffTab() {
       const res = await fetch("/api/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ staff }) });
       if (!res.ok) throw new Error();
       setInitialStaff(staff);
-      toast.success("Staff saved successfully");
+      toast.success("Staff saved");
     } catch { toast.error("Save failed"); }
     setSaving(false);
   }
+
+  if (loading) return <Skeleton className="h-64 rounded-2xl" />;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
-            <Users className="h-7 w-7 text-brand-accent" />
-            Staff Members
-          </h2>
-          <Text variant="muted" className="mt-1">Manage your server staff team</Text>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Staff</h2>
+          <p className="text-sm text-zinc-500">Manage staff members</p>
         </div>
-        <Button onClick={addMember} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Staff
+        <Button onClick={addMember} size="sm" className="gap-2">
+          <Plus className="h-4 w-4" /> Add
         </Button>
       </div>
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-2xl" />)}</div>
-      ) : staff.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-          <Users className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
-          <Text variant="muted">No staff members yet</Text>
-          <Button variant="outline" className="mt-4" onClick={addMember}>
-            <Plus className="h-4 w-4 mr-2" /> Add your first staff member
-          </Button>
+      {staff.length === 0 ? (
+        <div className="text-center py-12 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 mb-4">No staff members yet</p>
+          <Button variant="outline" size="sm" onClick={addMember}>Add first staff</Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
           {staff.map((member, idx) => (
-            <StaffMemberCard
-              key={member.id}
-              member={member}
-              isUploading={isUploading[member.id]}
-              onDropOrChange={(file, revokeOld, oldUrl) => handleImageUpload({ file, memberId: member.id, revokeOld, oldUrl })}
-              onChange={updateMember}
-              onDelete={deleteMember}
+            <div 
+              key={member.id} 
               ref={idx === staff.length - 1 ? newMemberRef : undefined}
-              fileInputRef={el => { fileInputRefs.current[member.id] = el; }}
-            />
+              className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+            >
+              <div className="relative group">
+                <img
+                  src={member.image || `https://mc-heads.net/avatar/${member.name}/80`}
+                  alt={member.name}
+                  className="h-10 w-10 rounded-full bg-zinc-200 dark:bg-zinc-700"
+                />
+                <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file, member.id);
+                    }}
+                  />
+                  <span className="text-xs text-white font-medium">Change</span>
+                </label>
+                {member.image && (
+                  <button
+                    onClick={() => updateMember(member.id, { image: "" })}
+                    className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px]"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    value={member.name}
+                    onChange={e => updateMember(member.id, { name: e.target.value })}
+                    placeholder="Name"
+                    className="h-8"
+                  />
+                  <Input
+                    value={member.rank}
+                    onChange={e => updateMember(member.id, { rank: e.target.value })}
+                    placeholder="Rank"
+                    className="h-8"
+                  />
+                </div>
+                <Input
+                  value={member.bio}
+                  onChange={e => updateMember(member.id, { bio: e.target.value })}
+                  placeholder="Bio"
+                  className="h-8 mt-2"
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-500 hover:text-red-600 shrink-0"
+                onClick={() => { if (window.confirm("Delete?")) deleteMember(member.id); }}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </div>
           ))}
         </div>
       )}
 
       {isDirty && (
-        <div className="sticky bottom-4 flex items-center justify-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
-          <Text size="sm" variant="muted">You have unsaved changes</Text>
-          <Button variant="outline" size="sm" onClick={() => { setStaff(initialStaff); toast("Changes discarded"); }}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
-          </Button>
+        <div className="flex items-center justify-between p-4 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+          <p className="text-sm text-zinc-500">Unsaved changes</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setStaff(initialStaff)}>Cancel</Button>
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-const StaffMemberCard = memo(forwardRef<HTMLDivElement, {
-  member: StaffMember;
-  isUploading?: boolean;
-  onDropOrChange: (file: File, revokeOld?: boolean, oldUrl?: string) => void;
-  onChange: (id: string, patch: Partial<StaffMember>) => void;
-  onDelete: (id: string) => void;
-  fileInputRef?: (el: HTMLInputElement | null) => void;
-}>(
-  ({ member, isUploading, onDropOrChange, onChange, onDelete, fileInputRef }, ref) => {
-    const lastPreviewUrl = useRef<string | null>(null);
-    const localFileInputRef = useRef<HTMLInputElement | null>(null);
-
-    useEffect(() => { if (fileInputRef) fileInputRef(localFileInputRef.current); }, [fileInputRef]);
-    useEffect(() => () => { if (lastPreviewUrl.current) URL.revokeObjectURL(lastPreviewUrl.current); }, []);
-
-    function handleImageDrop(e: React.DragEvent<HTMLDivElement>) {
-      e.preventDefault();
-      const file = e.dataTransfer?.files?.[0];
-      if (!file) return;
-      onDropOrChange(file, true, lastPreviewUrl.current || undefined);
-      lastPreviewUrl.current = URL.createObjectURL(file);
-    }
-
-    function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      onDropOrChange(file, true, lastPreviewUrl.current || undefined);
-      lastPreviewUrl.current = URL.createObjectURL(file);
-    }
-
-    return (
-      <div ref={ref} className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div className="flex p-4 gap-4">
-          <div
-            onDrop={handleImageDrop} onDragOver={e => e.preventDefault()}
-            className="relative h-20 w-20 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-brand-accent transition-colors"
-            onClick={() => localFileInputRef.current?.click()}
-          >
-            {member.image ? (
-              <Image src={member.image} alt={member.name} fill className="object-cover" unoptimized />
-            ) : member.name ? (
-              <Image src={`https://mc-heads.net/avatar/${member.name}/120`} alt={member.name} fill className="object-cover opacity-50" unoptimized />
-            ) : (
-              <div className="flex items-center justify-center h-full text-[10px] text-zinc-400 text-center p-1">Drop image</div>
-            )}
-            {isUploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-              </div>
-            )}
-            <input type="file" accept="image/*" style={{ display: "none" }} ref={localFileInputRef} onChange={handleFileInput} />
-          </div>
-
-          <div className="flex-1 min-w-0 space-y-3">
-            <div>
-              <Input
-                value={member.name}
-                onChange={e => onChange(member.id, { name: e.target.value })}
-                placeholder="Staff name"
-                className="h-9 font-semibold"
-              />
-            </div>
-            <div>
-              <Input
-                value={member.rank}
-                onChange={e => onChange(member.id, { rank: e.target.value })}
-                placeholder="Rank (e.g. Admin)"
-                className="h-8 text-sm"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={() => { if (window.confirm("Delete this staff member?")) onDelete(member.id); }}
-            className="h-9 w-9 shrink-0 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-          >
-            <Trash className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="px-4 pb-4">
-          <Textarea
-            value={member.bio}
-            onChange={e => onChange(member.id, { bio: e.target.value })}
-            placeholder="Staff bio..."
-            rows={2}
-            className="text-sm resize-none"
-          />
-        </div>
-      </div>
-    );
-  }
-));
-StaffMemberCard.displayName = "StaffMemberCard";
 
 // ═══════════════════════════════════════════════
 // RULES TAB
@@ -872,7 +827,7 @@ function VoteTab() {
               </div>
               <div>
                 <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Icon</Label>
-                <Combobox value={site.icon || ""} onValueChange={v => updateSite(index, { icon: v })}>
+                <Combobox value={site.icon || ""} onValueChange={v => updateSite(index, { icon: v || undefined })}>
                   <div className="relative">
                     <ComboboxInput placeholder="Select icon" className="h-10 pl-10" />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2">

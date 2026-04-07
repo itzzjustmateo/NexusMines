@@ -43,8 +43,8 @@ export function ServerCard() {
         </div>
         
         <div className="flex flex-wrap justify-center items-center gap-4">
-          <AddressCopy value={javaIp} label="Java" type="java" />
-          <AddressCopy value={bedrockIp} label="Bedrock" type="bedrock" />
+          <AddressCopy value={javaIp} label="Java" serverType="java" />
+          <AddressCopy value={bedrockIp} label="Bedrock" serverType="bedrock" />
         </div>
       </div>
 
