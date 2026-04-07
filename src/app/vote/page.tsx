@@ -2,15 +2,11 @@
 
 import Link from "next/link";
 import { voteSites } from "@/data/vote";
-import { Star, Rocket, ExternalLink, Gift, Zap, Heart, MessageSquare } from "lucide-react";
+import { Star, Rocket, ExternalLink } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Star,
   Rocket,
-  Gift,
-  Zap,
-  Heart,
-  MessageSquare,
 };
 
 function HeroSection() {
@@ -75,27 +71,11 @@ function VoteList() {
   );
 }
 
-function RewardsSection() {
-  return (
-    <section className="px-4 py-12 bg-white dark:bg-zinc-950">
-      <div className="max-w-2xl mx-auto text-center">
-        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">
-          Voting Rewards
-        </h2>
-        <p className="mt-2 text-zinc-500 text-sm">
-          Vote daily to earn exclusive in-game items and currency.
-        </p>
-      </div>
-    </section>
-  );
-}
-
 export default function VotePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
       <HeroSection />
       <VoteList />
-      <RewardsSection />
     </div>
   );
 }
