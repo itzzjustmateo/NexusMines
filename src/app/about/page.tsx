@@ -25,7 +25,7 @@ export default function AboutPage() {
 
         <div className="mt-8 text-center pt-8 border-t border-zinc-100 dark:border-zinc-900">
           <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-            Made with ❤️ by <span className="font-semibold text-brand-accent">TechNova</span>
+            Made with ❤️ by <span className="font-semibold text-brand-accent">DevFlare</span>
           </p>
           <div className="mt-2 text-[10px] uppercase font-bold tracking-widest text-zinc-400">
             Want to contribute or have feedback? Reach out on our Discord or GitHub.

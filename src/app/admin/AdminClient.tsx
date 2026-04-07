@@ -80,6 +80,7 @@ const navItems = [
   { id: "staff", label: "Staff", icon: Users },
   { id: "rules", label: "Rules", icon: ShieldCheck },
   { id: "blog", label: "Blog", icon: FileText },
+  { id: "vote", label: "Vote", icon: Star },
   { id: "server", label: "Server", icon: Server },
   { id: "accounts", label: "Accounts", icon: KeyRound },
 ] as const;
@@ -180,6 +181,7 @@ export default function AdminClient({ username, roles }: { username?: string; ro
         {tab === "staff" && <StaffTab />}
         {tab === "rules" && <RulesTab />}
         {tab === "blog" && <BlogTab />}
+        {tab === "vote" && <VoteTab />}
         {tab === "server" && <ServerTab />}
         {tab === "accounts" && <AccountsTab userRoles={roles} />}
       </main>
@@ -768,6 +770,165 @@ function ServerTab() {
           </Text>
         </div>
         <Button variant="outline" onClick={() => { setConfig(initialConfig); toast("Changes discarded"); }} disabled={!isDirty}>
+          Cancel
+        </Button>
+        <Button onClick={save} disabled={saving || !isDirty}>
+          {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════
+// VOTE TAB
+// ═══════════════════════════════════════════════
+
+type VoteSite = { name: string; href: string; icon: string; color: string; desc: string; enabled: boolean };
+
+function VoteTab() {
+  const [voteSites, setVoteSites] = useState<VoteSite[]>([]);
+  const [initialVoteSites, setInitialVoteSites] = useState<VoteSite[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const newSiteRef = useRef<HTMLDivElement | null>(null);
+  const isDirty = useMemo(() => !deepEquals(voteSites, initialVoteSites), [voteSites, initialVoteSites]);
+  useWarnIfDirty(isDirty);
+
+  useEffect(() => {
+    fetch("/api/vote").then(r => r.json()).then(data => {
+      const arr = Array.isArray(data) ? data : [];
+      setVoteSites(arr); setInitialVoteSites(arr); setLoading(false);
+    }).catch(() => { setLoading(false); toast.error("Failed to load vote sites"); });
+  }, []);
+
+  const addSite = useCallback(() => {
+    setVoteSites(prev => [...prev, { name: "New Site", href: "https://", icon: "Star", color: "text-yellow-500", desc: "", enabled: true }]);
+    setTimeout(() => newSiteRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 200);
+  }, []);
+
+  const updateSite = useCallback((index: number, patch: Partial<VoteSite>) => {
+    setVoteSites(prev => prev.map((s, i) => i === index ? { ...s, ...patch } : s));
+  }, []);
+
+  const deleteSite = useCallback((index: number) => {
+    setVoteSites(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ voteSites }) });
+      if (!res.ok) throw new Error();
+      setInitialVoteSites(voteSites);
+      toast.success("Vote sites saved");
+    } catch { toast.error("Save failed"); }
+    setSaving(false);
+  }
+
+  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
+            <Star className="h-7 w-7 text-brand-accent" />
+            Vote Sites
+          </h2>
+          <Text variant="muted" className="mt-1">Manage voting links shown on the vote page</Text>
+        </div>
+        <Button onClick={addSite} className="gap-2">
+          <Plus className="h-4 w-4" /> Add Site
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {voteSites.map((site, index) => (
+          <div key={index} ref={index === voteSites.length - 1 ? newSiteRef : null} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Text weight="semibold">Site #{index + 1}</Text>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${site.enabled ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"}`}>
+                  {site.enabled ? "Enabled" : "Disabled"}
+                </span>
+              </div>
+              <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" onClick={() => deleteSite(index)}>
+                <Trash className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Name</Label>
+                <Input value={site.name} onChange={e => updateSite(index, { name: e.target.value })} placeholder="Site name" className="h-10" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">URL</Label>
+                <Input value={site.href} onChange={e => updateSite(index, { href: e.target.value })} placeholder="https://" className="h-10 font-mono text-sm" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Description</Label>
+                <Input value={site.desc} onChange={e => updateSite(index, { desc: e.target.value })} placeholder="Description" className="h-10" />
+              </div>
+              <div>
+                <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Icon</Label>
+                <Combobox value={site.icon || ""} onValueChange={v => updateSite(index, { icon: v })}>
+                  <div className="relative">
+                    <ComboboxInput placeholder="Select icon" className="h-10 pl-10" />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                      {site.icon && ICON_MAP[site.icon] ? (() => {
+                        const Icon = ICON_MAP[site.icon];
+                        return <Icon className="h-4 w-4 text-zinc-500" />;
+                      })() : null}
+                    </div>
+                  </div>
+                  <ComboboxContent>
+                    <ComboboxList>
+                      {AVAILABLE_ICONS.map(icon => {
+                        const Icon = ICON_MAP[icon];
+                        return (
+                          <ComboboxItem 
+                            key={icon} 
+                            value={icon}
+                            className={site.icon === icon ? "bg-zinc-100 dark:bg-zinc-800" : ""}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span>{icon}</span>
+                          </ComboboxItem>
+                        );
+                      })}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id={`enabled-${index}`}
+                checked={site.enabled}
+                onChange={e => updateSite(index, { enabled: e.target.checked })}
+                className="h-4 w-4 rounded border-zinc-300"
+              />
+              <Label htmlFor={`enabled-${index}`} className="text-sm cursor-pointer">Enabled</Label>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {voteSites.length === 0 && (
+        <div className="text-center py-12 text-zinc-500">
+          <p>No vote sites configured. Add one to get started.</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-xl">
+        <div className="flex-1">
+          <Text size="sm" variant="muted">
+            {isDirty ? "You have unsaved changes" : "All changes saved"}
+          </Text>
+        </div>
+        <Button variant="outline" onClick={() => { setVoteSites(initialVoteSites); toast("Changes discarded"); }} disabled={!isDirty}>
           Cancel
         </Button>
         <Button onClick={save} disabled={saving || !isDirty}>

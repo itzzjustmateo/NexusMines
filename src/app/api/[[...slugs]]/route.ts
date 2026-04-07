@@ -9,6 +9,7 @@ const DATA_PATH = path.join(process.cwd(), "src/data/staff.ts");
 const RULES_DATA_PATH = path.join(process.cwd(), "src/data/rules.ts");
 const ADMIN_DATA_PATH = path.join(process.cwd(), "src/data/admin.ts");
 const BLOG_DATA_PATH = path.join(process.cwd(), "src/data/blog.ts");
+const VOTE_DATA_PATH = path.join(process.cwd(), "src/data/vote.ts");
 const CONFIG_PATH = path.join(process.cwd(), "src/data/server-config.json");
 const UPLOAD_DIR = path.join(process.cwd(), "public/staff");
 
@@ -457,6 +458,51 @@ export const blogPosts: BlogPost[] = ${JSON.stringify(posts, null, 2)};
       console.error("Error deleting blog post:", e);
       return { error: "Failed to delete blog post" };
     }
+  })
+  // ─── Vote Sites ───
+  .get("/vote", () => {
+    try {
+      const content = fs.readFileSync(VOTE_DATA_PATH, "utf-8");
+      const match = content.match(/export const voteSites: VoteSite\[\] = ([\s\S]*);/);
+      if (match) {
+        let arrayStr = match[1].trim();
+        if (arrayStr.endsWith(";")) arrayStr = arrayStr.slice(0, -1);
+        const voteData = new Function(`return ${arrayStr}`)();
+        return voteData;
+      }
+      return [];
+    } catch (e) {
+      console.error("Error loading vote sites:", e);
+      return [];
+    }
+  })
+  .post("/vote", async ({ body, set }) => {
+    const session = await getSession();
+    if (!session.isLoggedIn) { set.status = 401; return { error: "Unauthorized" }; }
+    const fileContent = `export type VoteSite = {
+  name: string;
+  href: string;
+  icon: string;
+  color: string;
+  desc: string;
+  enabled: boolean;
+};
+
+export const voteSites: VoteSite[] = ${JSON.stringify(body.voteSites, null, 2)};
+`;
+    fs.writeFileSync(VOTE_DATA_PATH, fileContent);
+    return { ok: true };
+  }, {
+    body: t.Object({
+      voteSites: t.Array(t.Object({
+        name: t.String(),
+        href: t.String(),
+        icon: t.String(),
+        color: t.String(),
+        desc: t.String(),
+        enabled: t.Boolean(),
+      }))
+    })
   });
 
 export const GET = app.handle;

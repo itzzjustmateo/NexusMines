@@ -62,7 +62,7 @@ export default function RootLayout({
             </Providers>
           </main>
 
-          <Footer createdAt={2025} name="TechNova" allRightsReserved />
+          <Footer createdAt={2025} name="DevFlare" allRightsReserved />
           <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
