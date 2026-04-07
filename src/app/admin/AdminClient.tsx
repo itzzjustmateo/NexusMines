@@ -73,6 +73,7 @@ function useWarnIfDirty(isDirty: boolean) {
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldAlert, UserCheck, BugOff, MegaphoneOff, Gavel, AlertCircle,
   Clock, Heart, Star, Zap, Hammer, Lock, MessageSquare, Globe, Ghost, Sword, Axe,
+  Users, Gamepad2,
 };
 const AVAILABLE_ICONS = Object.keys(ICON_MAP);
 
@@ -372,7 +373,7 @@ function RulesTab() {
   const isDirty = useMemo(() => !deepEquals(rules, initialRules), [rules, initialRules]);
   useWarnIfDirty(isDirty);
 
-  const CATEGORY_ICONS = ["Shield", "Gamepad2", "MessageSquare", "Users", "Zap", "Lock", "Globe"];
+  const CATEGORY_ICONS = ["ShieldAlert", "Gamepad2", "MessageSquare", "Users", "Zap", "Lock", "Globe"];
 
   useEffect(() => {
     fetch("/api/rules").then(r => r.json()).then(data => {
@@ -399,7 +400,7 @@ function RulesTab() {
     const ruleId = crypto.randomUUID();
     setRules(prev => prev.map(c => {
       if (c.id === categoryId) {
-        return { ...c, rules: [...c.rules, { id: ruleId, title: "New Rule", desc: "", icon: "ShieldAlert" }] };
+        return { ...c, rules: [...c.rules, { id: ruleId, title: "New Rule", desc: "" }] };
       }
       return c;
     }));
@@ -429,185 +430,110 @@ function RulesTab() {
       const res = await fetch("/api/rules", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rules }) });
       if (!res.ok) throw new Error();
       setInitialRules(rules);
-      toast.success("Rules saved successfully");
+      toast.success("Rules saved");
     } catch { toast.error("Save failed"); }
     setSaving(false);
   }
 
-  if (loading) return <div className="space-y-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}</div>;
+  if (loading) return <Skeleton className="h-64 rounded-2xl" />;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
-            <ShieldCheck className="h-7 w-7 text-brand-accent" />
-            Server Rules
-          </h2>
-          <Text variant="muted" className="mt-1">Manage server rules and categories</Text>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Rules</h2>
+          <p className="text-sm text-zinc-500">Manage server rules</p>
         </div>
-        <Button onClick={addCategory} className="gap-2">
+        <Button onClick={addCategory} size="sm" className="gap-2">
           <Plus className="h-4 w-4" /> Add Category
         </Button>
       </div>
 
-      {rules.length === 0 && (
-        <div className="text-center py-16 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
-          <ShieldCheck className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
-          <Text variant="muted">No rule categories yet</Text>
-          <Button variant="outline" className="mt-4" onClick={addCategory}>
-            <Plus className="h-4 w-4 mr-2" /> Create your first category
-          </Button>
+      {rules.length === 0 ? (
+        <div className="text-center py-12 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 mb-4">No rule categories yet</p>
+          <Button variant="outline" size="sm" onClick={addCategory}>Add first category</Button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {rules.map((category, idx) => (
+            <div 
+              key={category.id}
+              ref={idx === rules.length - 1 ? newCategoryRef : undefined}
+              className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700"
+            >
+              <div className="flex items-center gap-2 p-3 border-b border-zinc-100 dark:border-zinc-700">
+                <Combobox value={category.icon || ""} onValueChange={v => updateCategory(category.id, { icon: v || "ShieldAlert" })}>
+                  <div className="relative">
+                    <ComboboxInput placeholder="Icon" className="w-24 h-8 pl-8" />
+                    <div className="absolute left-2.5 top-1/2 -translate-y-1/2">
+                      {(() => {
+                        const iconKey = CATEGORY_ICONS.includes(category.icon || "") ? category.icon! : "ShieldAlert";
+                        const Icon = ICON_MAP[iconKey];
+                        return Icon ? <Icon className="h-4 w-4 text-zinc-500" /> : null;
+                      })()}
+                    </div>
+                  </div>
+                  <ComboboxContent>
+                    <ComboboxList>
+                      {CATEGORY_ICONS.map(icon => {
+                        const Icon = ICON_MAP[icon];
+                        return (
+                          <ComboboxItem key={icon} value={icon} className="flex items-center gap-2">
+                            {Icon && <Icon className="h-4 w-4" />}{icon}
+                          </ComboboxItem>
+                        );
+                      })}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+                <Input
+                  value={category.title}
+                  onChange={e => updateCategory(category.id, { title: e.target.value })}
+                  placeholder="Category title"
+                  className="flex-1 h-8 font-medium"
+                />
+                <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (window.confirm("Delete?")) deleteCategory(category.id); }}>
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="p-3 space-y-2">
+                {category.rules.map((rule) => (
+                  <div key={rule.id} className="flex items-center gap-2">
+                    <Input
+                      value={rule.title}
+                      onChange={e => updateRule(category.id, rule.id, { title: e.target.value })}
+                      placeholder="Rule title"
+                      className="flex-1 h-8"
+                    />
+                    <Button variant="ghost" size="sm" className="text-red-500 shrink-0" onClick={() => deleteRule(category.id, rule.id)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => addRuleToCategory(category.id)} className="w-full">
+                  <Plus className="h-4 w-4 mr-1" /> Add Rule
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="space-y-4">
-        {rules.map((category, idx) => (
-          <RuleCategoryCard
-            key={category.id}
-            category={category}
-            onUpdate={updateCategory}
-            onDelete={() => deleteCategory(category.id)}
-            onAddRule={() => addRuleToCategory(category.id)}
-            onUpdateRule={(ruleId, patch) => updateRule(category.id, ruleId, patch)}
-            onDeleteRule={(ruleId) => deleteRule(category.id, ruleId)}
-            categoryIcons={CATEGORY_ICONS}
-            ref={idx === rules.length - 1 ? newCategoryRef : undefined}
-          />
-        ))}
-      </div>
-
       {isDirty && (
-        <div className="sticky bottom-4 flex items-center justify-center gap-3 p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-800">
-          <Text size="sm" variant="muted">You have unsaved changes</Text>
-          <Button variant="outline" size="sm" onClick={() => { setRules(initialRules); toast("Changes discarded"); }}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={save} disabled={saving}>
-            {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Changes</>}
-          </Button>
+        <div className="flex items-center justify-between p-4 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+          <p className="text-sm text-zinc-500">Unsaved changes</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setRules(initialRules)}>Cancel</Button>
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
-
-const RuleRow = memo(forwardRef<HTMLDivElement, {
-  rule: Rule;
-  onUpdate: (id: string, patch: Partial<Rule>) => void;
-  onDelete: (id: string) => void;
-}>(({ rule, onUpdate, onDelete }, ref) => {
-  const [searchValue, setSearchValue] = useState("");
-  const filteredIcons = useMemo(() => {
-    if (!searchValue) return AVAILABLE_ICONS;
-    return AVAILABLE_ICONS.filter(icon => icon.toLowerCase().includes(searchValue.toLowerCase()));
-  }, [searchValue]);
-
-  return (
-    <div ref={ref} className="group p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-800">
-      <div className="flex gap-4">
-        <div className="shrink-0">
-          <Combobox value={rule.icon} onValueChange={icon => onUpdate(rule.id, { icon: icon as string })}>
-            <ComboboxInput placeholder="Icon..." className="w-32 h-9" />
-            <ComboboxContent>
-              <ComboboxList>
-                {filteredIcons.slice(0, 10).map(icon => {
-                  const Icon = ICON_MAP[icon];
-                  return <ComboboxItem key={icon} value={icon} className="flex items-center gap-2"><Icon className="h-4 w-4" />{icon}</ComboboxItem>;
-                })}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-        </div>
-        <div className="flex-1 space-y-2">
-          <Input value={rule.title} onChange={e => onUpdate(rule.id, { title: e.target.value })} placeholder="Rule title" className="h-9" />
-          <Textarea value={rule.desc} onChange={e => onUpdate(rule.id, { desc: e.target.value })} placeholder="Rule description..." rows={2} className="text-sm resize-none" />
-        </div>
-        <button
-          onClick={() => { if (window.confirm("Delete this rule?")) onDelete(rule.id); }}
-          className="h-9 w-9 shrink-0 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100"
-        >
-          <Trash className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}));
-RuleRow.displayName = "RuleRow";
-
-const RuleCategoryCard = memo(forwardRef<HTMLDivElement, {
-  category: RuleCategory;
-  onUpdate: (id: string, patch: Partial<RuleCategory>) => void;
-  onDelete: () => void;
-  onAddRule: () => void;
-  onUpdateRule: (ruleId: string, patch: Partial<Rule>) => void;
-  onDeleteRule: (ruleId: string) => void;
-  categoryIcons: string[];
-}>(({ category, onUpdate, onDelete, onAddRule, onUpdateRule, onDeleteRule, categoryIcons }, ref) => {
-  const [searchValue, setSearchValue] = useState("");
-  const [expanded, setExpanded] = useState(true);
-  const filteredIcons = useMemo(() => {
-    if (!searchValue) return categoryIcons;
-    return categoryIcons.filter(icon => icon.toLowerCase().includes(searchValue.toLowerCase()));
-  }, [searchValue, categoryIcons]);
-
-  const CATEGORY_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-    Shield: ShieldAlert, Gamepad2: Gamepad2, MessageSquare: MessageSquare,
-    Users: UserCheck, Zap: Zap, Lock: Lock, Globe: Globe,
-  };
-
-  const CurrentIcon = CATEGORY_ICON_MAP[category.icon] || ShieldAlert;
-
-  return (
-    <div ref={ref} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-      <div className="flex items-center gap-4 p-4 border-b border-zinc-100 dark:border-zinc-800">
-        <button onClick={() => setExpanded(!expanded)} className="h-10 w-10 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-          <CurrentIcon className="h-5 w-5" />
-        </button>
-        <Input
-          value={category.title}
-          onChange={e => onUpdate(category.id, { title: e.target.value })}
-          className="flex-1 h-10 font-semibold text-lg"
-          placeholder="Category title"
-        />
-        <Combobox value={category.icon} onValueChange={icon => onUpdate(category.id, { icon: icon || undefined })}>
-          <ComboboxInput placeholder="Icon" className="w-28" />
-          <ComboboxContent>
-            <ComboboxList>
-              {filteredIcons.map(icon => {
-                const Icon = CATEGORY_ICON_MAP[icon];
-                return <ComboboxItem key={icon} value={icon} className="flex items-center gap-2"><Icon className="h-4 w-4" />{icon}</ComboboxItem>;
-              })}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-        <button
-          onClick={() => { if (window.confirm("Delete this category?")) onDelete(); }}
-          className="h-10 w-10 rounded-xl text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors"
-        >
-          <Trash className="h-4 w-4" />
-        </button>
-      </div>
-
-      {expanded && (
-        <div className="p-4 space-y-3">
-          {category.rules.length === 0 && (
-            <div className="text-center py-8 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
-              <Text variant="muted" size="sm">No rules in this category</Text>
-            </div>
-          )}
-          {category.rules.map(rule => (
-            <RuleRow key={rule.id} rule={rule} onUpdate={onUpdateRule} onDelete={onDeleteRule} />
-          ))}
-          <Button variant="outline" size="sm" onClick={onAddRule} className="w-full gap-2">
-            <Plus className="h-4 w-4" /> Add Rule
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-}));
-RuleCategoryCard.displayName = "RuleCategoryCard";
 
 // ═══════════════════════════════════════════════
 // SERVER TAB
@@ -1237,11 +1163,10 @@ function BlogTab() {
       slug: "",
       title: "New Post",
       excerpt: "",
-      content: "<p>Write your content here...</p>",
+      content: "",
       author: "NexusMines Team",
       publishedAt: new Date().toISOString().split("T")[0],
       tags: [],
-      coverImage: ""
     };
     setEditingPost(newPost);
     setIsCreating(true);
@@ -1264,9 +1189,8 @@ function BlogTab() {
         body: JSON.stringify(editingPost)
       });
       if (!res.ok) throw new Error();
-      const savedPost = await res.json();
       if (isCreating) {
-        setPosts(prev => [savedPost.ok ? editingPost : savedPost, ...prev]);
+        setPosts(prev => [editingPost, ...prev]);
       } else {
         setPosts(prev => prev.map(p => p.slug === editingPost.slug ? editingPost : p));
       }
@@ -1292,107 +1216,106 @@ function BlogTab() {
     setEditingPost(prev => prev ? { ...prev, ...patch } : null);
   }, []);
 
-  if (loading) return <Skeleton className="h-96 rounded-2xl" />;
+  if (loading) return <Skeleton className="h-64 rounded-2xl" />;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
-            <FileText className="h-7 w-7 text-brand-accent" />
-            Blog Posts
-          </h2>
-          <Text variant="muted" className="mt-1">Create and manage blog content</Text>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Blog</h2>
+          <p className="text-sm text-zinc-500">Manage blog posts</p>
         </div>
-        <Button onClick={createPost} className="gap-2">
+        <Button onClick={createPost} size="sm" className="gap-2">
           <Plus className="h-4 w-4" /> New Post
         </Button>
       </div>
 
       {editingPost ? (
-        <div ref={newPostRef} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-6">
+        <div ref={newPostRef} className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <Text weight="semibold" className="text-lg">{isCreating ? "Create New Post" : "Edit Post"}</Text>
+            <h3 className="font-medium">{isCreating ? "Create Post" : "Edit Post"}</h3>
             <Button variant="ghost" size="sm" onClick={() => { setEditingPost(null); setIsCreating(false); }}>Cancel</Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Title</Label>
-              <Input value={editingPost.title} onChange={e => updateEditingPost({ title: e.target.value })} placeholder="Post title" className="h-11" />
+              <Label className="text-xs text-zinc-500 mb-1 block">Title</Label>
+              <Input value={editingPost.title} onChange={e => updateEditingPost({ title: e.target.value })} placeholder="Title" className="h-9" />
             </div>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Slug</Label>
-              <Input value={editingPost.slug} onChange={e => updateEditingPost({ slug: e.target.value })} placeholder="post-slug" className="h-11" />
+              <Label className="text-xs text-zinc-500 mb-1 block">Slug</Label>
+              <Input value={editingPost.slug} onChange={e => updateEditingPost({ slug: e.target.value })} placeholder="slug" className="h-9" />
             </div>
           </div>
 
           <div>
-            <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Excerpt</Label>
+            <Label className="text-xs text-zinc-500 mb-1 block">Excerpt</Label>
             <Textarea value={editingPost.excerpt} onChange={e => updateEditingPost({ excerpt: e.target.value })} placeholder="Short description..." rows={2} />
           </div>
 
           <div>
-            <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Content</Label>
-            <RichTextEditor content={editingPost.content} onChange={content => updateEditingPost({ content })} placeholder="Write your blog post content..." />
+            <Label className="text-xs text-zinc-500 mb-1 block">Content</Label>
+            <Textarea value={editingPost.content} onChange={e => updateEditingPost({ content: e.target.value })} placeholder="Blog content..." rows={6} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Author</Label>
-              <Input value={editingPost.author} onChange={e => updateEditingPost({ author: e.target.value })} className="h-11" />
+              <Label className="text-xs text-zinc-500 mb-1 block">Author</Label>
+              <Input value={editingPost.author} onChange={e => updateEditingPost({ author: e.target.value })} className="h-9" />
             </div>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Date</Label>
-              <Input type="date" value={editingPost.publishedAt} onChange={e => updateEditingPost({ publishedAt: e.target.value })} className="h-11" />
+              <Label className="text-xs text-zinc-500 mb-1 block">Date</Label>
+              <Input type="date" value={editingPost.publishedAt} onChange={e => updateEditingPost({ publishedAt: e.target.value })} className="h-9" />
             </div>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-zinc-500 mb-2 block">Cover Image</Label>
-              <Input value={editingPost.coverImage || ""} onChange={e => updateEditingPost({ coverImage: e.target.value })} placeholder="https://..." className="h-11" />
+              <Label className="text-xs text-zinc-500 mb-1 block">Cover Image</Label>
+              <Input value={editingPost.coverImage || ""} onChange={e => updateEditingPost({ coverImage: e.target.value })} placeholder="https://..." className="h-9" />
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-            <Button onClick={savePost} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save Post</>}
+          <div className="flex gap-2">
+            <Button onClick={savePost} disabled={saving} size="sm">
+              {saving ? "Saving..." : "Save"}
             </Button>
             {!isCreating && (
-              <Button variant="destructive" onClick={() => { if (window.confirm("Delete this post?")) deletePost(editingPost.slug); }}>
-                <Trash className="h-4 w-4 mr-2" />Delete
+              <Button variant="destructive" size="sm" onClick={() => { if (window.confirm("Delete?")) deletePost(editingPost.slug); }}>
+                <Trash className="h-4 w-4" />
               </Button>
             )}
           </div>
         </div>
+      ) : posts.length === 0 ? (
+        <div className="text-center py-12 border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
+          <p className="text-zinc-500 mb-4">No blog posts yet</p>
+          <Button variant="outline" size="sm" onClick={createPost}>Add first post</Button>
+        </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          {posts.length === 0 && (
-            <div className="text-center py-16">
-              <FileText className="h-12 w-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
-              <Text variant="muted">No blog posts yet</Text>
-              <Button variant="outline" className="mt-4" onClick={createPost}>
-                <Plus className="h-4 w-4 mr-2" /> Create your first post
-              </Button>
-            </div>
-          )}
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {posts.map((post) => (
-              <div key={post.slug} className="flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                <div className="flex-1 min-w-0">
-                  <Text weight="semibold" className="truncate">{post.title}</Text>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Text size="xs" variant="muted">{post.publishedAt}</Text>
-                    <span className="text-zinc-300">•</span>
-                    <Text size="xs" variant="muted" className="truncate">{post.excerpt}</Text>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Button variant="ghost" size="sm" onClick={() => editPost(post)}>Edit</Button>
-                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600" onClick={() => { if (window.confirm("Delete this post?")) deletePost(post.slug); }}>
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
+        <div className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+          {posts.map((post) => (
+            <div key={post.slug} className="flex items-center justify-between p-3 border-b border-zinc-100 dark:border-zinc-700 last:border-0">
+              <div className="min-w-0">
+                <p className="font-medium truncate">{post.title}</p>
+                <p className="text-xs text-zinc-500 truncate">{post.publishedAt}</p>
               </div>
-            ))}
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => editPost(post)}>Edit</Button>
+                <Button variant="ghost" size="sm" className="text-red-500" onClick={() => { if (window.confirm("Delete?")) deletePost(post.slug); }}>
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isDirty && (
+        <div className="flex items-center justify-between p-4 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+          <p className="text-sm text-zinc-500">Unsaved changes</p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPosts(initialPosts)}>Cancel</Button>
+            <Button size="sm" onClick={savePost} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
           </div>
         </div>
       )}
