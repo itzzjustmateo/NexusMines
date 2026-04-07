@@ -16,7 +16,6 @@ const FOOTER_LINKS = {
   ],
   resources: [
     { label: "Blog", href: "/blog" },
-    { label: "About", href: "/about" },
     { label: "Status", href: "/status" },
   ],
 };
@@ -56,31 +55,32 @@ function Footer({
   return (
     <footer
       className={cn(
-        "w-full py-12 px-4 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 transition-colors duration-200",
+        "w-full py-16 px-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800",
         className
       )}
       {...props}
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 group">
-              <span className="font-black text-xl tracking-tight">
-                Nexus<span className="text-brand-accent">Mines</span>
+            <Link href="/" className="inline-block">
+              <span className="font-bold text-xl text-zinc-900 dark:text-white">
+                NexusMines
               </span>
             </Link>
-            <Text size="sm" variant="muted" className="mt-3">
+            <Text size="sm" variant="muted" className="mt-3 leading-relaxed">
               The ultimate Minecraft experience with custom gameplay and real progression.
             </Text>
             {/* Social Links */}
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-2 mt-4">
               <a
-                href="/discord"
+                href="https://discord.gg/nexusmines"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-[#5865F2] hover:bg-[#5865F2]/10 transition-colors"
+                className="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-[#5865F2]/10 hover:text-[#5865F2] transition-colors"
+                aria-label="Join Discord"
               >
                 <MessageCircle className="h-4 w-4" />
               </a>
@@ -88,7 +88,8 @@ function Footer({
                 href="https://github.com/itzzjustmateo/NexusMines"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+                className="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                aria-label="View GitHub"
               >
                 <Github className="h-4 w-4" />
               </a>
@@ -97,7 +98,7 @@ function Footer({
 
           {/* Play Links */}
           <div>
-            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+            <Text weight="medium" className="text-sm text-zinc-900 dark:text-white mb-4">
               Play
             </Text>
             <ul className="space-y-2.5">
@@ -105,7 +106,7 @@ function Footer({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -116,7 +117,7 @@ function Footer({
 
           {/* Community Links */}
           <div>
-            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+            <Text weight="medium" className="text-sm text-zinc-900 dark:text-white mb-4">
               Community
             </Text>
             <ul className="space-y-2.5">
@@ -124,7 +125,7 @@ function Footer({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -135,7 +136,7 @@ function Footer({
 
           {/* Resources Links */}
           <div>
-            <Text weight="semibold" className="text-sm text-zinc-900 dark:text-white mb-4">
+            <Text weight="medium" className="text-sm text-zinc-900 dark:text-white mb-4">
               Resources
             </Text>
             <ul className="space-y-2.5">
@@ -143,7 +144,7 @@ function Footer({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-brand-accent transition-colors"
+                    className="text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -154,12 +155,12 @@ function Footer({
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Text size="xs" variant="muted" className="text-center sm:text-left">
+        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <Text size="sm" variant="muted" className="text-center sm:text-left">
             © {yearLabel} {name}. {allRightsReserved || rightsText}
           </Text>
-          <Text size="xs" variant="muted" className="flex items-center gap-1">
-            Made with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> for Minecraft players
+          <Text size="sm" variant="muted" className="flex items-center gap-1">
+            Made with <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" /> for Minecraft players
           </Text>
         </div>
       </div>
