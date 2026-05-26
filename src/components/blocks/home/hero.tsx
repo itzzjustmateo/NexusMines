@@ -50,6 +50,18 @@ export function HeroSection() {
           The ultimate Minecraft experience. Custom gameplay. Real progression. Zero nonsense.
         </p>
 
+        <div className="mt-6 mx-auto max-w-2xl rounded-2xl border border-red-200/60 bg-red-50/80 px-5 py-4 backdrop-blur-sm dark:border-red-900/50 dark:bg-red-950/40">
+          <p className="text-sm sm:text-base leading-relaxed text-red-700 dark:text-red-300">
+            <span className="font-semibold text-red-800 dark:text-red-200">
+              Server Offline:
+            </span>{" "}
+            The server is currently unavailable because the owner was banned from the hosting platform for distributing malware.
+            <span className="block mt-2 text-red-600 dark:text-red-400">
+              This situation is unrelated to ItzzMateo, the website developer.
+            </span>
+          </p>
+        </div>
+
         {mounted && (
           <div className="mt-10 flex flex-wrap justify-center items-center gap-3">
             <AddressCopy value={javaIp} label="Java" serverType="java" />
