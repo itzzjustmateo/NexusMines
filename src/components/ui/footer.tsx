@@ -76,7 +76,7 @@ function Footer({
             {/* Social Links */}
             <div className="flex items-center gap-2 mt-4">
               <a
-                href="https://discord.gg/nexusmines"
+                href="https://dc.devflare.de/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-[#5865F2]/10 hover:text-[#5865F2] transition-colors"
